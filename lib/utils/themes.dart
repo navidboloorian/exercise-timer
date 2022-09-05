@@ -20,6 +20,9 @@ class Themes {
           fontWeight: FontWeight.w300,
         ),
       ),
+      iconTheme: const IconThemeData(
+        color: Colors.white,
+      ),
     );
   }
 }

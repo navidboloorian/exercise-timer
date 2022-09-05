@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'utils/themes.dart';
+import 'ui/shared/widgets/bottom_bar.dart';
 
 void main() {
   runApp(const App());
@@ -17,6 +18,7 @@ class App extends StatelessWidget {
         appBar: AppBar(
           title: const Text('Exercise Library'),
         ),
+        bottomNavigationBar: const BottomBar(),
       ),
       debugShowCheckedModeBanner: false,
     );
