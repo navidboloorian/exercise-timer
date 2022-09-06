@@ -18,6 +18,7 @@ class _AppState extends State<App> {
   @override
   Widget build(BuildContext context) {
     // list of all navigable pages
+    // pass these to other widgets to avoid mistakes on lower levels
     const List<String> pages = <String>['exercises', 'routines', 'market'];
 
     return MaterialApp(

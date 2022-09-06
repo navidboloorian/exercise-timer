@@ -13,6 +13,9 @@ class Market extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Market'),
       ),
+      body: const Center(
+        child: Text('Market'),
+      ),
       bottomNavigationBar: BottomBar(pages: pages),
     );
   }

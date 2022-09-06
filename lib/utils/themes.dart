@@ -9,6 +9,11 @@ class Themes {
       primaryColor: CustomColors.darkBackground,
       scaffoldBackgroundColor: CustomColors.darkBackground,
       fontFamily: 'Montserrat',
+      textTheme: const TextTheme(
+        bodyText1: TextStyle(color: Colors.white, fontWeight: FontWeight.w300),
+        bodyText2: TextStyle(
+            color: Colors.white, fontWeight: FontWeight.w300, fontSize: 20),
+      ),
       appBarTheme: const AppBarTheme(
         backgroundColor: CustomColors.darkBackground,
         foregroundColor: CustomColors.darkText,
