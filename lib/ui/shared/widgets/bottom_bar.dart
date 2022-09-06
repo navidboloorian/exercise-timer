@@ -2,18 +2,16 @@ import 'package:flutter/material.dart';
 
 import '../../../utils/colors.dart';
 
-class BottomBar extends StatelessWidget {
-  // track the current page
-  // passed down from main app widget
-  final int currentIndex;
-  final Function setCurrentIndex;
+class BottomBar extends StatefulWidget {
+  final List<String> pages;
 
-  const BottomBar({
-    super.key,
-    required this.currentIndex,
-    required this.setCurrentIndex,
-  });
+  const BottomBar({super.key, required this.pages});
 
+  @override
+  State<BottomBar> createState() => _BottomBarState();
+}
+
+class _BottomBarState extends State<BottomBar> {
   @override
   Widget build(BuildContext context) {
     // map icons to simply names
@@ -39,9 +37,11 @@ class BottomBar extends StatelessWidget {
     }
 
     return BottomNavigationBar(
-      currentIndex: currentIndex,
       type: BottomNavigationBarType.fixed,
-      onTap: (index) => setCurrentIndex(index),
+      onTap: (index) => Navigator.pushReplacementNamed(
+        context,
+        widget.pages[index],
+      ),
       elevation: 0,
       showSelectedLabels: false,
       showUnselectedLabels: false,

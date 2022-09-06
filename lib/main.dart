@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import 'utils/themes.dart';
-import 'ui/shared/widgets/bottom_bar.dart';
 import 'ui/pages/pages.dart';
 
 void main() {
@@ -16,42 +15,34 @@ class App extends StatefulWidget {
 }
 
 class _AppState extends State<App> {
-  // default screen is "routines"
-  int _currentPageIndex = 1;
-
-  void _setCurrentPageIndex(int index) {
-    setState(
-      () {
-        _currentPageIndex = index;
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     // list of all navigable pages
-    const List<Widget> pages = <Widget>[
-      Exercises(),
-      Routines(),
-      Market(),
-    ];
-
-    // current page is controlled by the bottom navigation bar
-    BottomBar bottomBar = BottomBar(
-      currentIndex: _currentPageIndex,
-      setCurrentIndex: _setCurrentPageIndex,
-    );
+    const List<String> pages = <String>['exercises', 'routines', 'market'];
 
     return MaterialApp(
       theme: Themes.dark,
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Exercise Library'),
-        ),
-        // display the page dictated by the variable
-        body: pages[_currentPageIndex],
-        bottomNavigationBar: bottomBar,
-      ),
+      onGenerateRoute: (route) {
+        // allows for access of routes by name
+        // not using the route field of MaterialApp so the default animation can be removed
+        if (route.name == 'exercises') {
+          return PageRouteBuilder(
+              pageBuilder: (_, __, ___) => const Exercises(pages: pages));
+        }
+
+        if (route.name == 'routines') {
+          return PageRouteBuilder(
+              pageBuilder: (_, __, ___) => const Routines(pages: pages));
+        }
+
+        if (route.name == 'market') {
+          return PageRouteBuilder(
+              pageBuilder: (_, __, ___) => const Market(pages: pages));
+        }
+
+        return null;
+      },
+      home: const Routines(pages: pages),
       debugShowCheckedModeBanner: false,
     );
   }

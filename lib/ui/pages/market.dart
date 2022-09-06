@@ -1,12 +1,19 @@
 import 'package:flutter/material.dart';
 
+import '../shared/widgets/bottom_bar.dart';
+
 class Market extends StatelessWidget {
-  const Market({super.key});
+  final List<String> pages;
+
+  const Market({super.key, required this.pages});
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: Text('MARKET'),
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Market'),
+      ),
+      bottomNavigationBar: BottomBar(pages: pages),
     );
   }
 }
