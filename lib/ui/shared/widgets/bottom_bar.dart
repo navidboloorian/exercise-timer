@@ -2,60 +2,51 @@ import 'package:flutter/material.dart';
 
 import '../../../utils/colors.dart';
 
-class BottomBar extends StatefulWidget {
-  const BottomBar({super.key});
+class BottomBar extends StatelessWidget {
+  // track the current page
+  // passed down from main app widget
+  final int currentIndex;
+  final Function setCurrentIndex;
 
-  @override
-  State<BottomBar> createState() => _BottomBarState();
-}
-
-class _BottomBarState extends State<BottomBar> {
-  static const List<IconButton> _pages = <IconButton>[
-    IconButton(
-      onPressed: null,
-      icon: Icon(
-        Icons.fitness_center,
-        color: Colors.white,
-      ),
-    ),
-    IconButton(
-      onPressed: null,
-      icon: Icon(
-        Icons.timer,
-        color: Colors.white,
-      ),
-    ),
-    IconButton(
-      onPressed: null,
-      icon: Icon(
-        Icons.public,
-        color: Colors.white,
-      ),
-    ),
-  ];
-
-  static const List<BottomNavigationBarItem> _pageIcons =
-      <BottomNavigationBarItem>[
-    BottomNavigationBarItem(
-      icon: Icon(Icons.timer),
-      label: 'Home',
-    ),
-    BottomNavigationBarItem(
-      icon: Icon(Icons.fitness_center),
-      label: 'Fitness',
-    ),
-    BottomNavigationBarItem(
-      icon: Icon(Icons.public),
-      label: 'Here',
-    ),
-  ];
+  const BottomBar({
+    super.key,
+    required this.currentIndex,
+    required this.setCurrentIndex,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      mainAxisSize: MainAxisSize.max,
-      children: _pages,
+    // map icons to simply names
+    const Map<String, IconData> icons = <String, IconData>{
+      'exercises': Icons.fitness_center,
+      'routines': Icons.timer,
+      'market': Icons.public,
+    };
+
+    List<BottomNavigationBarItem> barItems = <BottomNavigationBarItem>[];
+
+    // creates list of navigation bar buttons
+    for (String name in icons.keys) {
+      barItems.add(
+        BottomNavigationBarItem(
+          label: name,
+          icon: Icon(
+            icons[name],
+            color: Colors.white,
+          ),
+        ),
+      );
+    }
+
+    return BottomNavigationBar(
+      currentIndex: currentIndex,
+      type: BottomNavigationBarType.fixed,
+      onTap: (index) => setCurrentIndex(index),
+      elevation: 0,
+      showSelectedLabels: false,
+      showUnselectedLabels: false,
+      backgroundColor: CustomColors.darkBackground,
+      items: barItems,
     );
   }
 }

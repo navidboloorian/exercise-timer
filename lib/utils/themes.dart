@@ -16,7 +16,7 @@ class Themes {
         elevation: 0,
         titleTextStyle: TextStyle(
           fontFamily: 'Montserrat',
-          fontSize: 50,
+          fontSize: 30,
           fontWeight: FontWeight.w300,
         ),
       ),
