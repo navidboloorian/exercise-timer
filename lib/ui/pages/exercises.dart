@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../shared/widgets/bottom_bar.dart';
+import '../shared/widgets/shared.dart';
 
 class Exercises extends StatelessWidget {
   final List<String> pages;
@@ -12,9 +12,29 @@ class Exercises extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Exercise Library'),
+        actions: const <Widget>[PlusButton(onPressed: null)],
       ),
-      body: const Center(
-        child: Text("Exercise"),
+      body: Center(
+        child: Column(
+          children: const [
+            DropShadowContainer(
+              content: TextField(
+                maxLines: null,
+                decoration: InputDecoration(
+                  hintText: 'Password',
+                ),
+              ),
+            ),
+            SizedBox(height: 10),
+            DropShadowContainer(
+              content: Text('Password'),
+            ),
+            SizedBox(height: 10),
+            DropShadowContainer(
+              content: Text("HELLO"),
+            ),
+          ],
+        ),
       ),
       bottomNavigationBar: BottomBar(pages: pages),
     );

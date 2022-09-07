@@ -3,13 +3,13 @@ import 'package:flutter/material.dart';
 import '../../../utils/colors.dart';
 
 class DropShadowContainer extends StatelessWidget {
-  final String text;
+  final Widget content;
   final List<String> tags;
   final Function? onTap;
 
   const DropShadowContainer({
     super.key,
-    required this.text,
+    required this.content,
     this.tags = const <String>[],
     this.onTap,
   });
@@ -46,7 +46,7 @@ class DropShadowContainer extends StatelessWidget {
     return GestureDetector(
       onTap: () => onTap,
       child: Container(
-        width: 300,
+        width: MediaQuery.of(context).size.width * 0.9,
         padding: const EdgeInsets.only(
           left: 5,
           right: 5,
@@ -66,7 +66,7 @@ class DropShadowContainer extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Align(alignment: Alignment.centerLeft, child: Text(text)),
+            Align(alignment: Alignment.centerLeft, child: content),
 
             // conditionally render tags portion of container
             if (tags.isNotEmpty) ...[

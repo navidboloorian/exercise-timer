@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'utils/themes.dart';
 import 'ui/pages/pages.dart';
+import 'ui/shared/widgets/create_exercise.dart';
 
 void main() {
   runApp(const App());
