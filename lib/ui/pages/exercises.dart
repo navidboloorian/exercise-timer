@@ -20,10 +20,16 @@ class Exercises extends StatelessWidget {
             DropShadowContainer(
               content: TextField(
                 maxLines: null,
+                maxLength: 75,
                 decoration: InputDecoration(
                   hintText: 'Password',
+                  counterText: '',
                 ),
               ),
+            ),
+            SizedBox(height: 10),
+            SwitchButton(
+              options: ["left", "right"],
             ),
             SizedBox(height: 10),
             DropShadowContainer(

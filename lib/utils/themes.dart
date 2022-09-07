@@ -49,6 +49,7 @@ class Themes {
         floatingLabelBehavior: FloatingLabelBehavior.always,
         hintStyle: TextStyle(color: Colors.white),
         floatingLabelStyle: TextStyle(height: 0),
+        counterStyle: TextStyle(height: 0),
         contentPadding: EdgeInsets.only(left: 0, right: 0, top: 5, bottom: 5),
         // constraints: BoxConstraints(minHeight: 30, maxHeight: 35),
       ),
