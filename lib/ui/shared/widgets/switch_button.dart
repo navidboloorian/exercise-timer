@@ -18,6 +18,7 @@ class SwitchButton extends ConsumerWidget {
     final SwitchButtonNotifier switchButtonNotifier =
         ref.watch(switchButtonFamily.notifier);
 
+    // get the state of the notifier
     final int currentIndex = ref.watch(switchButtonFamily);
 
     return DropShadowContainer(
