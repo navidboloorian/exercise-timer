@@ -1,44 +1,44 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'shared_widgets.dart';
+import '../providers/shared_providers.dart';
 import '../../../utils/colors.dart';
-import 'shared.dart';
 
-class SwitchButton extends StatefulWidget {
+class SwitchButton extends ConsumerWidget {
   final List<String> options;
+  final switchButtonFamily;
 
-  const SwitchButton({super.key, required this.options});
-
-  @override
-  State<SwitchButton> createState() => _SwitchButtonState();
-}
-
-class _SwitchButtonState extends State<SwitchButton> {
-  int _selectedIndex = 0;
+  const SwitchButton(
+      {Key? key, required this.options, required this.switchButtonFamily})
+      : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final SwitchButtonNotifier switchButtonNotifier =
+        ref.watch(switchButtonFamily.notifier);
+
+    final int currentIndex = ref.watch(switchButtonFamily);
+
     return DropShadowContainer(
       isSwitch: true,
       content: Row(
         children: [
-          for (int i = 0; i < widget.options.length; i++) ...[
+          for (int i = 0; i < options.length; i++) ...[
             GestureDetector(
-              onTap: () => setState(
-                () {
-                  _selectedIndex = i;
-                },
-              ),
+              onTap: () => switchButtonNotifier.setIndex(i),
               child: Container(
                 // divide the width of the parent container equally or each option
-                width: MediaQuery.of(context).size.width *
-                    (0.9 / widget.options.length),
+                width:
+                    MediaQuery.of(context).size.width * (0.9 / options.length),
                 padding: const EdgeInsets.only(bottom: 5),
-                color: _selectedIndex == i
+                color: currentIndex == i
                     ? Colors.white
                     : CustomColors.darkBackground,
                 child: Center(
                   child: Text(
-                    widget.options[i],
-                    style: _selectedIndex == i
+                    options[i],
+                    style: currentIndex == i
                         ? const TextStyle(color: CustomColors.darkBackground)
                         : const TextStyle(color: Colors.white),
                   ),

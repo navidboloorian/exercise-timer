@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../shared/widgets/shared.dart';
+import '../shared/widgets/shared_widgets.dart';
 
 class Exercises extends StatelessWidget {
   final List<String> pages;
@@ -12,7 +12,14 @@ class Exercises extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Exercise Library'),
-        actions: const <Widget>[PlusButton(onPressed: null)],
+        actions: <Widget>[
+          PlusButton(
+            onPressed: () => Navigator.pushNamed(context, 'create_exercise'),
+          ),
+          const SizedBox(
+            width: 10,
+          )
+        ],
       ),
       body: Center(
         child: Column(
@@ -28,9 +35,6 @@ class Exercises extends StatelessWidget {
               ),
             ),
             SizedBox(height: 10),
-            SwitchButton(
-              options: ["left", "right"],
-            ),
             SizedBox(height: 10),
             DropShadowContainer(
               content: Text('Password'),

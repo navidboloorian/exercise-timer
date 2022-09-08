@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'utils/themes.dart';
 import 'ui/pages/pages.dart';
-import 'ui/shared/widgets/create_exercise.dart';
 
 void main() {
-  runApp(const App());
+  runApp(const ProviderScope(child: App()));
 }
 
 class App extends StatefulWidget {
@@ -43,6 +43,9 @@ class _AppState extends State<App> {
         }
 
         return null;
+      },
+      routes: {
+        'create_exercise': (context) => const CreateExercise(),
       },
       home: const Routines(pages: pages),
       debugShowCheckedModeBanner: false,

@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 
 class PlusButton extends StatelessWidget {
-  final Function? onPressed;
+  final VoidCallback onPressed;
 
-  const PlusButton({super.key, this.onPressed});
+  const PlusButton({super.key, required this.onPressed});
 
   @override
   Widget build(BuildContext context) {
     return IconButton(
-      onPressed: () => onPressed,
+      onPressed: onPressed,
       icon: const Icon(
         Icons.add,
         color: Colors.white,

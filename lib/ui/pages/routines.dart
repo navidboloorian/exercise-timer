@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../shared/widgets/shared.dart';
+import '../shared/widgets/shared_widgets.dart';
 
 class Routines extends StatelessWidget {
   final List<String> pages;
