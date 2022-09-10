@@ -1,6 +1,4 @@
-import 'package:exercise_timer/ui/shared/widgets/add_button.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../shared/widgets/shared_widgets.dart';
@@ -20,8 +18,10 @@ class _CreateRoutineState extends ConsumerState<CreateRoutine> {
   final _descriptionController = TextEditingController();
 
   // create two separate state-tracking notifiers; one for each button
-  final _weightedSwitchButton = switchButtonFamily('isWeighted');
-  final _timedSwitchButton = switchButtonFamily('isTimed');
+  final _weightedSwitchButton =
+      switchButtonFamily('isWeighted'); // 0 = unweighted, 1 = weighted
+  final _timedSwitchButton =
+      switchButtonFamily('isTimed'); // 0 = reps, 1 = timed
 
   @override
   void dispose() {
@@ -54,7 +54,7 @@ class _CreateRoutineState extends ConsumerState<CreateRoutine> {
           child: Column(
             children: [
               DropShadowContainer(
-                content: TextFormField(
+                child: TextFormField(
                   maxLines: null,
                   maxLength: 75,
                   decoration: const InputDecoration(
@@ -86,10 +86,11 @@ class ExerciseSearchAutocomplete extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // all exercises in library
     List<ExerciseSearchResult> options = <ExerciseSearchResult>[];
 
     return DropShadowContainer(
-      content: Autocomplete<ExerciseSearchResult>(
+      child: Autocomplete<ExerciseSearchResult>(
         optionsViewBuilder: (context, onSelected, options) {
           return Material(
             child: Container(
@@ -106,7 +107,7 @@ class ExerciseSearchAutocomplete extends ConsumerWidget {
               ),
               width: MediaQuery.of(context).size.width * 0.9 - 10,
               height: 37.0 * options.length,
-              constraints: BoxConstraints(maxHeight: 138),
+              constraints: const BoxConstraints(maxHeight: 138), // 4 * height
               child: ListView.builder(
                 itemCount: options.length,
                 itemBuilder: (BuildContext context, int index) {
@@ -129,6 +130,7 @@ class ExerciseSearchAutocomplete extends ConsumerWidget {
           List<ExerciseSearchResult> results = <ExerciseSearchResult>[];
 
           for (ExerciseSearchResult option in options) {
+            // use contains to account for substrings
             if (option.name
                 .toLowerCase()
                 .contains(textEditingValue.text.toLowerCase())) {
@@ -157,6 +159,7 @@ class ExerciseSearchResult extends ConsumerWidget {
         children: [
           const SizedBox(width: 5),
           Text(name),
+          // move plus icon to the right of the box
           const Spacer(),
           const Icon(Icons.add),
         ],

@@ -1,8 +1,10 @@
+import 'package:exercise_timer/ui/shared/providers/exercise_list_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../shared/widgets/shared_widgets.dart';
 import '../../shared/providers/shared_providers.dart';
+import '../../shared/classes/shared_classes.dart';
 
 class CreateExercise extends ConsumerStatefulWidget {
   const CreateExercise({Key? key}) : super(key: key);
@@ -13,8 +15,11 @@ class CreateExercise extends ConsumerStatefulWidget {
 
 class _CreateExerciseState extends ConsumerState<CreateExercise> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final _titleController = TextEditingController();
+  final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
+
+  //
+  final _exerciseList = exerciseListProvider;
 
   // create two separate state-tracking notifiers; one for each button
   final _weightedSwitchButton = switchButtonFamily('isWeighted');
@@ -22,13 +27,16 @@ class _CreateExerciseState extends ConsumerState<CreateExercise> {
 
   @override
   void dispose() {
-    _titleController.dispose();
+    _nameController.dispose();
     _descriptionController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final ExerciseListNotifier exerciseListNotifier =
+        ref.watch(_exerciseList.notifier);
+
     // create notifiers to interact with notifier methods
     final SwitchButtonNotifier weightedButtonNotifier =
         ref.watch(_weightedSwitchButton.notifier);
@@ -41,8 +49,17 @@ class _CreateExerciseState extends ConsumerState<CreateExercise> {
     final int isTimed =
         ref.watch(_timedSwitchButton); // 0 = for reps, 1 = for time
 
+    // create exercise and add to exercise list
     void submitForm() {
       if (_formKey.currentState!.validate()) {
+        exerciseListNotifier.addExercise(
+          Exercise(
+            _nameController.text,
+            isTimed,
+            isWeighted,
+            _descriptionController.text,
+          ),
+        );
         weightedButtonNotifier.resetIndex();
         timedButtonNotifier.resetIndex();
         Navigator.pop(context);
@@ -71,17 +88,17 @@ class _CreateExerciseState extends ConsumerState<CreateExercise> {
           child: Column(
             children: [
               DropShadowContainer(
-                content: TextFormField(
+                child: TextFormField(
                   maxLines: null,
                   maxLength: 75,
                   decoration: const InputDecoration(
                     hintText: 'Exercise name',
                     counterText: '',
                   ),
-                  controller: _titleController,
+                  controller: _nameController,
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'A title is required';
+                      return 'A name is required';
                     }
                     return null;
                   },
@@ -99,7 +116,7 @@ class _CreateExerciseState extends ConsumerState<CreateExercise> {
               ),
               const SizedBox(height: 10),
               DropShadowContainer(
-                content: TextFormField(
+                child: TextFormField(
                   minLines: 5,
                   maxLines: null,
                   decoration: const InputDecoration(

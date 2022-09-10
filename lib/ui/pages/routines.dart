@@ -25,12 +25,12 @@ class Routines extends StatelessWidget {
         child: Column(
           children: const [
             DropShadowContainer(
-              content: Text("HELLO"),
+              child: Text("HELLO"),
               tags: ['hello', 'goodbye'],
             ),
             SizedBox(height: 10),
             DropShadowContainer(
-              content: Text("HELLO"),
+              child: Text("HELLO"),
             ),
           ],
         ),

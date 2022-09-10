@@ -1,14 +1,41 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../shared/widgets/shared_widgets.dart';
+import '../shared/providers/shared_providers.dart';
+import '../shared/classes/shared_classes.dart';
 
-class Exercises extends StatelessWidget {
+class Exercises extends ConsumerWidget {
   final List<String> pages;
 
-  const Exercises({super.key, required this.pages});
+  const Exercises({Key? key, required this.pages}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final exerciseList = ref.watch(exerciseListProvider);
+
+    print(exerciseList);
+
+    List<Widget> exerciseListRenderer() {
+      List<Widget> widgetList = <Widget>[];
+
+      for (Exercise exercise in exerciseList) {
+        widgetList.add(
+          DropShadowContainer(
+            child: Text(exercise.name),
+          ),
+        );
+
+        widgetList.add(
+          const SizedBox(
+            height: 10,
+          ),
+        );
+      }
+
+      return widgetList;
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Exercise Library'),
@@ -22,28 +49,7 @@ class Exercises extends StatelessWidget {
         ],
       ),
       body: Center(
-        child: Column(
-          children: const [
-            DropShadowContainer(
-              content: TextField(
-                maxLines: null,
-                maxLength: 75,
-                decoration: InputDecoration(
-                  hintText: 'Password',
-                  counterText: '',
-                ),
-              ),
-            ),
-            SizedBox(height: 10),
-            DropShadowContainer(
-              content: Text('Password'),
-            ),
-            SizedBox(height: 10),
-            DropShadowContainer(
-              content: Text("HELLO"),
-            ),
-          ],
-        ),
+        child: Column(children: exerciseListRenderer()),
       ),
       bottomNavigationBar: BottomBar(pages: pages),
     );

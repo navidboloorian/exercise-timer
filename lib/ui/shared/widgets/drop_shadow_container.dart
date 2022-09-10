@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../utils/colors.dart';
 
 class DropShadowContainer extends StatelessWidget {
-  final Widget content;
+  final Widget child;
   final List<String> tags;
   final Function? onTap;
   final bool hasPadding;
@@ -11,7 +11,7 @@ class DropShadowContainer extends StatelessWidget {
 
   const DropShadowContainer({
     super.key,
-    required this.content,
+    required this.child,
     this.tags = const <String>[],
     this.onTap,
     this.hasPadding = true,
@@ -73,7 +73,7 @@ class DropShadowContainer extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Align(alignment: Alignment.centerLeft, child: content),
+            Align(alignment: Alignment.centerLeft, child: child),
 
             // conditionally render tags portion of container
             if (tags.isNotEmpty) ...[

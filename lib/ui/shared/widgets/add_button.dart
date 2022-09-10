@@ -12,7 +12,7 @@ class AddButton extends StatelessWidget {
     return DropShadowContainer(
       hasPadding: false,
       color: Colors.white,
-      content: Center(
+      child: Center(
         child: IconButton(
           onPressed: onPressed,
           icon: const Icon(

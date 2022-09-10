@@ -23,7 +23,7 @@ class SwitchButton extends ConsumerWidget {
 
     return DropShadowContainer(
       hasPadding: false,
-      content: Row(
+      child: Row(
         children: [
           for (int i = 0; i < options.length; i++) ...[
             GestureDetector(
