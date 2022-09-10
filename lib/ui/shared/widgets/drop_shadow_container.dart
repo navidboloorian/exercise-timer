@@ -6,14 +6,16 @@ class DropShadowContainer extends StatelessWidget {
   final Widget content;
   final List<String> tags;
   final Function? onTap;
-  final bool isSwitch;
+  final bool hasPadding;
+  final Color color;
 
   const DropShadowContainer({
     super.key,
     required this.content,
     this.tags = const <String>[],
     this.onTap,
-    this.isSwitch = false,
+    this.hasPadding = true,
+    this.color = CustomColors.darkBackground,
   });
 
   @override
@@ -50,7 +52,7 @@ class DropShadowContainer extends StatelessWidget {
       child: Container(
         width: MediaQuery.of(context).size.width * 0.9,
         // switches have their own padding to avoid glitchy display
-        padding: !isSwitch
+        padding: hasPadding
             ? const EdgeInsets.only(
                 left: 5,
                 right: 5,
@@ -58,7 +60,7 @@ class DropShadowContainer extends StatelessWidget {
               )
             : null,
         decoration: BoxDecoration(
-          color: CustomColors.darkBackground,
+          color: color,
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.25),

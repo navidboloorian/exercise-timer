@@ -22,7 +22,7 @@ class SwitchButton extends ConsumerWidget {
     final int currentIndex = ref.watch(switchButtonFamily);
 
     return DropShadowContainer(
-      isSwitch: true,
+      hasPadding: false,
       content: Row(
         children: [
           for (int i = 0; i < options.length; i++) ...[

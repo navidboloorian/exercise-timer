@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../shared/widgets/shared_widgets.dart';
 
@@ -11,6 +12,14 @@ class Routines extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Routines'),
+        actions: <Widget>[
+          PlusButton(
+            onPressed: () => Navigator.pushNamed(context, 'create_routine'),
+          ),
+          const SizedBox(
+            width: 10,
+          )
+        ],
       ),
       body: Center(
         child: Column(
