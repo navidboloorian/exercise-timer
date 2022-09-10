@@ -14,15 +14,28 @@ class Exercises extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final exerciseList = ref.watch(exerciseListProvider);
 
-    print(exerciseList);
-
     List<Widget> exerciseListRenderer() {
       List<Widget> widgetList = <Widget>[];
 
       for (Exercise exercise in exerciseList) {
         widgetList.add(
-          DropShadowContainer(
-            child: Text(exercise.name),
+          GestureDetector(
+            child: DropShadowContainer(
+              tags: exercise.tags,
+              child: Row(
+                children: [
+                  Text(exercise.name),
+                  const Spacer(),
+                  const IconButton(
+                    onPressed: null,
+                    icon: Icon(
+                      Icons.delete,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         );
 

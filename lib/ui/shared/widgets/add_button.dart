@@ -5,7 +5,7 @@ import 'shared_widgets.dart';
 class AddButton extends StatelessWidget {
   final VoidCallback? onPressed;
 
-  const AddButton({super.key, this.onPressed = null});
+  const AddButton({super.key, this.onPressed});
 
   @override
   Widget build(BuildContext context) {

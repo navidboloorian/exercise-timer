@@ -1,4 +1,3 @@
-import 'package:exercise_timer/ui/shared/providers/exercise_list_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -17,6 +16,7 @@ class _CreateExerciseState extends ConsumerState<CreateExercise> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
+  final _tagsController = TextEditingController();
 
   //
   final _exerciseList = exerciseListProvider;
@@ -52,14 +52,17 @@ class _CreateExerciseState extends ConsumerState<CreateExercise> {
     // create exercise and add to exercise list
     void submitForm() {
       if (_formKey.currentState!.validate()) {
+        List<String> tagsList = [];
+
+        if (_tagsController.text.isNotEmpty) {
+          tagsList = _tagsController.text.split(',');
+        }
+
         exerciseListNotifier.addExercise(
-          Exercise(
-            _nameController.text,
-            isTimed,
-            isWeighted,
-            _descriptionController.text,
-          ),
+          Exercise(_nameController.text, isTimed, isWeighted,
+              _descriptionController.text, tagsList),
         );
+
         weightedButtonNotifier.resetIndex();
         timedButtonNotifier.resetIndex();
         Navigator.pop(context);
@@ -124,6 +127,17 @@ class _CreateExerciseState extends ConsumerState<CreateExercise> {
                     counterText: '',
                   ),
                   controller: _descriptionController,
+                ),
+              ),
+              const SizedBox(height: 10),
+              DropShadowContainer(
+                child: TextFormField(
+                  maxLines: null,
+                  decoration: const InputDecoration(
+                    hintText: 'Tags (separate with commas)',
+                    counterText: '',
+                  ),
+                  controller: _tagsController,
                 ),
               ),
             ],

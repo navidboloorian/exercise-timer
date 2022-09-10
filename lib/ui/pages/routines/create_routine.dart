@@ -17,12 +17,6 @@ class _CreateRoutineState extends ConsumerState<CreateRoutine> {
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
 
-  // create two separate state-tracking notifiers; one for each button
-  final _weightedSwitchButton =
-      switchButtonFamily('isWeighted'); // 0 = unweighted, 1 = weighted
-  final _timedSwitchButton =
-      switchButtonFamily('isTimed'); // 0 = reps, 1 = timed
-
   @override
   void dispose() {
     _titleController.dispose();

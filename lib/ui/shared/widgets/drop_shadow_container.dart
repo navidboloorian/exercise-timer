@@ -37,9 +37,11 @@ class DropShadowContainer extends StatelessWidget {
               Radius.circular(100),
             ),
           ),
-          child: Text(
-            tag,
-            style: const TextStyle(fontSize: 10),
+          child: Center(
+            child: Text(
+              tag.trim(),
+              style: const TextStyle(fontSize: 10),
+            ),
           ),
         ),
       );
