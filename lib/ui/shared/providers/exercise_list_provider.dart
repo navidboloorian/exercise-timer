@@ -16,7 +16,7 @@ class ExerciseListNotifier extends StateNotifier<List<Exercise>> {
   }
 
   void clearExercises() {
-    state.clear();
+    state = [];
   }
 }
 

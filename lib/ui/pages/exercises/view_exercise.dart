@@ -1,0 +1,161 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:charts_flutter/flutter.dart';
+
+import '../../shared/widgets/shared_widgets.dart';
+import '../../shared/providers/shared_providers.dart';
+import '../../shared/classes/shared_classes.dart';
+
+class ViewExercise extends ConsumerStatefulWidget {
+  const ViewExercise({Key? key}) : super(key: key);
+
+  @override
+  ConsumerState<ConsumerStatefulWidget> createState() => _ViewExerciseState();
+}
+
+class _ViewExerciseState extends ConsumerState<ViewExercise> {
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
+  final _descriptionController = TextEditingController();
+  final _tagsController = TextEditingController();
+
+  //
+  final _exerciseList = exerciseListProvider;
+
+  // create two separate state-tracking notifiers; one for each button
+  final _weightedSwitchButton = switchButtonFamily('isWeighted');
+  final _timedSwitchButton = switchButtonFamily('isTimed');
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ExerciseListNotifier exerciseListNotifier =
+        ref.watch(_exerciseList.notifier);
+
+    // create notifiers to interact with notifier methods
+    final SwitchButtonNotifier weightedButtonNotifier =
+        ref.watch(_weightedSwitchButton.notifier);
+    final SwitchButtonNotifier timedButtonNotifier =
+        ref.watch(_timedSwitchButton.notifier);
+
+    // get the state of the notifier
+    final int isWeighted =
+        ref.watch(_weightedSwitchButton); // 0 = not weighted, 1 = weighted
+    final int isTimed =
+        ref.watch(_timedSwitchButton); // 0 = for reps, 1 = for time
+
+    // create exercise and add to exercise list
+    void submitForm() {
+      if (_formKey.currentState!.validate()) {
+        List<String> tagsList = [];
+
+        if (_tagsController.text.isNotEmpty) {
+          tagsList = _tagsController.text.split(',');
+        }
+
+        exerciseListNotifier.addExercise(
+          Exercise(_nameController.text, isTimed, isWeighted,
+              _descriptionController.text, tagsList),
+        );
+
+        weightedButtonNotifier.resetIndex();
+        timedButtonNotifier.resetIndex();
+        Navigator.pop(context);
+      }
+    }
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Exercise'),
+        actions: [
+          IconButton(
+            onPressed: submitForm,
+            icon: const Icon(
+              Icons.check,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(
+            width: 10,
+          )
+        ],
+      ),
+      body: Center(
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              DropShadowContainer(
+                child: TextFormField(
+                  maxLines: null,
+                  maxLength: 75,
+                  decoration: const InputDecoration(
+                    hintText: 'Exercise name',
+                    counterText: '',
+                  ),
+                  controller: _nameController,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'A name is required';
+                    }
+                    return null;
+                  },
+                ),
+              ),
+              const SizedBox(height: 10),
+              SwitchButton(
+                options: const ['Reps', 'Time'],
+                switchButtonFamily: _timedSwitchButton,
+              ),
+              const SizedBox(height: 10),
+              SwitchButton(
+                options: const ['Not Weighted', 'Weighted'],
+                switchButtonFamily: _weightedSwitchButton,
+              ),
+              const SizedBox(height: 10),
+              DropShadowContainer(
+                child: TextFormField(
+                  minLines: 5,
+                  maxLines: null,
+                  decoration: const InputDecoration(
+                    hintText: 'Description',
+                    counterText: '',
+                  ),
+                  controller: _descriptionController,
+                ),
+              ),
+              const SizedBox(height: 10),
+              DropShadowContainer(
+                child: TextFormField(
+                  maxLines: null,
+                  decoration: const InputDecoration(
+                    hintText: 'Tags (separate with commas)',
+                    counterText: '',
+                  ),
+                  controller: _tagsController,
+                ),
+              ),
+              const SizedBox(height: 10),
+              DropShadowContainer(
+                child: TextFormField(
+                  maxLines: null,
+                  decoration: const InputDecoration(
+                    hintText: 'Tags (separate with commas)',
+                    counterText: '',
+                  ),
+                  controller: _tagsController,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

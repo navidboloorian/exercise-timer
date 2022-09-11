@@ -6,18 +6,20 @@ class RoutineExerciseListNotifier extends StateNotifier<List<RoutineExercise>> {
   RoutineExerciseListNotifier() : super(<RoutineExercise>[]);
 
   void addExercise(RoutineExercise exercise) {
-    state.add(exercise);
+    state = [...state, exercise];
   }
 
-  void deleteExercise(RoutineExercise exercise) {
-    state.removeWhere((element) => element == exercise);
+  void deleteExercise(RoutineExercise exerciseToDelete) {
+    state = state
+        .where((RoutineExercise exercise) => exercise != exerciseToDelete)
+        .toList();
   }
 
   void clearExercises() {
-    state.clear();
+    state = [];
   }
 }
 
-final routineExerciseProvider =
+final routineExerciseListProvider =
     StateNotifierProvider<RoutineExerciseListNotifier, List<RoutineExercise>>(
         (ref) => RoutineExerciseListNotifier());

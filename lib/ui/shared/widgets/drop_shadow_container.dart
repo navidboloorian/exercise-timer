@@ -39,7 +39,7 @@ class DropShadowContainer extends StatelessWidget {
           ),
           child: Center(
             child: Text(
-              tag.trim(),
+              tag,
               style: const TextStyle(fontSize: 10),
             ),
           ),
