@@ -1,4 +1,4 @@
-import 'package:exercise_timer/ui/shared/classes/exercise.dart';
+import 'package:exercise_timer/db/models/exercise.dart';
 
 class RoutineExercise {
   Exercise exercise;

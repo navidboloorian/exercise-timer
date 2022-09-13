@@ -5,6 +5,7 @@ import 'utils/themes.dart';
 import 'ui/pages/pages.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const ProviderScope(child: App()));
 }
 

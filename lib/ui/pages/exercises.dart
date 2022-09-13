@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../shared/widgets/shared_widgets.dart';
 import '../shared/providers/shared_providers.dart';
-import '../shared/classes/shared_classes.dart';
+import '../../../db/models/exercise.dart';
 
 class Exercises extends ConsumerWidget {
   final List<String> pages;

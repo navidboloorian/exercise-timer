@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../shared/widgets/shared_widgets.dart';
 import '../../shared/providers/shared_providers.dart';
-import '../../shared/classes/shared_classes.dart';
+import '../../../db/models/shared_models.dart';
 
 class CreateExercise extends ConsumerStatefulWidget {
   const CreateExercise({Key? key}) : super(key: key);
@@ -44,9 +44,9 @@ class _CreateExerciseState extends ConsumerState<CreateExercise> {
         ref.watch(_timedSwitchButton.notifier);
 
     // get the state of the notifier
-    final int isWeighted =
+    final bool isWeighted =
         ref.watch(_weightedSwitchButton); // 0 = not weighted, 1 = weighted
-    final int isTimed =
+    final bool isTimed =
         ref.watch(_timedSwitchButton); // 0 = for reps, 1 = for time
 
     // create exercise and add to exercise list
@@ -58,13 +58,18 @@ class _CreateExerciseState extends ConsumerState<CreateExercise> {
           tagsList = _tagsController.text.split(',');
         }
 
-        exerciseListNotifier.addExercise(
-          Exercise(_nameController.text, isTimed, isWeighted,
-              _descriptionController.text, tagsList),
+        exerciseListNotifier.add(
+          Exercise(
+            name: _nameController.text,
+            isTimed: isTimed,
+            isWeighted: isWeighted,
+            description: _descriptionController.text,
+            tags: tagsList,
+          ),
         );
 
-        weightedButtonNotifier.resetIndex();
-        timedButtonNotifier.resetIndex();
+        weightedButtonNotifier.reset();
+        timedButtonNotifier.reset();
         Navigator.pop(context);
       }
     }
@@ -109,12 +114,14 @@ class _CreateExerciseState extends ConsumerState<CreateExercise> {
               ),
               const SizedBox(height: 10),
               SwitchButton(
-                options: const ['Reps', 'Time'],
+                falseOption: 'Reps',
+                trueOption: 'Time',
                 switchButtonFamily: _timedSwitchButton,
               ),
               const SizedBox(height: 10),
               SwitchButton(
-                options: const ['Not Weighted', 'Weighted'],
+                falseOption: 'Not Weighted',
+                trueOption: 'Weighted',
                 switchButtonFamily: _weightedSwitchButton,
               ),
               const SizedBox(height: 10),

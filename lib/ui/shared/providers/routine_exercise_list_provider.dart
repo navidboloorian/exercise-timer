@@ -5,11 +5,11 @@ class RoutineExerciseListNotifier extends StateNotifier<List<RoutineExercise>> {
   // set default state to 0
   RoutineExerciseListNotifier() : super(<RoutineExercise>[]);
 
-  void addExercise(RoutineExercise exercise) {
+  void add(RoutineExercise exercise) {
     state = [...state, exercise];
   }
 
-  void deleteExercise(RoutineExercise exerciseToDelete) {
+  void delete(RoutineExercise exerciseToDelete) {
     state = state
         .where((RoutineExercise exercise) => exercise != exerciseToDelete)
         .toList();

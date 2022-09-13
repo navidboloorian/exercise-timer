@@ -1,18 +1,18 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class SwitchButtonNotifier extends StateNotifier<int> {
+class SwitchButtonNotifier extends StateNotifier<bool> {
   // set default state to 0
-  SwitchButtonNotifier() : super(0);
+  SwitchButtonNotifier() : super(false);
 
-  void setIndex(int index) {
-    state = index;
+  void set(bool switchState) {
+    state = switchState;
   }
 
-  void resetIndex() {
-    state = 0;
+  void reset() {
+    state = false;
   }
 }
 
 final switchButtonFamily = StateNotifierProvider.autoDispose
-    .family<SwitchButtonNotifier, int, String>(
+    .family<SwitchButtonNotifier, bool, String>(
         (ref, name) => SwitchButtonNotifier());

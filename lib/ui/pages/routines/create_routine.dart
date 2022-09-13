@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../shared/widgets/shared_widgets.dart';
 import '../../shared/classes/shared_classes.dart';
 import '../../shared/providers/shared_providers.dart';
+import '../../../db/models/exercise.dart';
 import '../../../utils/colors.dart';
 
 class CreateRoutine extends ConsumerStatefulWidget {
@@ -14,7 +15,10 @@ class CreateRoutine extends ConsumerStatefulWidget {
 }
 
 class _CreateRoutineState extends ConsumerState<CreateRoutine> {
+  // used to submit the form/validate
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
+  // used to manipulate the text in the corresponding text fields
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
 
@@ -27,18 +31,20 @@ class _CreateRoutineState extends ConsumerState<CreateRoutine> {
 
   @override
   Widget build(BuildContext context) {
+    // list of the exercises in the current routine
     final routineExerciseList = ref.watch(routineExerciseListProvider);
 
-    List<Widget> routineWidgetList = <Widget>[];
+    // render list of widgets to render to the screen
+    List<Widget> widgetRenderList = <Widget>[];
 
     for (RoutineExercise routineExercise in routineExerciseList) {
-      routineWidgetList.add(
+      widgetRenderList.add(
         RoutineExerciseBox(
           exercise: routineExercise.exercise,
         ),
       );
 
-      routineWidgetList.add(
+      widgetRenderList.add(
         const SizedBox(height: 10),
       );
     }
@@ -82,7 +88,8 @@ class _CreateRoutineState extends ConsumerState<CreateRoutine> {
                 ),
               ),
               const SizedBox(height: 10),
-              for (Widget routineWidget in routineWidgetList) routineWidget,
+              // display widgets from render list
+              for (Widget routineWidget in widgetRenderList) routineWidget,
               const ExerciseSearchAutocomplete(),
               // const AddButton(onPressed: null),
             ],
@@ -98,15 +105,16 @@ class ExerciseSearchAutocomplete extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final routineExerciseListUpdater =
-        ref.watch(routineExerciseListProvider.notifier);
+    // list of the current exercises in the current routine
+    final routineExerciseList = ref.watch(routineExerciseListProvider.notifier);
 
+    // list of all the exercises in the exercise library
     final exerciseList = ref.watch(exerciseListProvider);
 
-    // all exercises in library
     List<ExerciseSearchResult> options = <ExerciseSearchResult>[];
 
     for (Exercise exercise in exerciseList) {
+      // make exercies in library into widgets to render
       options.add(ExerciseSearchResult(exercise: exercise));
     }
 
@@ -114,44 +122,45 @@ class ExerciseSearchAutocomplete extends ConsumerWidget {
       child: Autocomplete<ExerciseSearchResult>(
         optionsViewBuilder: (context, onSelected, options) {
           return Align(
-            alignment: Alignment.topLeft,
-            child: Material(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: CustomColors.darkBackground,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.25),
-                      offset: const Offset(0, 2),
-                      blurRadius: 0.5,
-                      spreadRadius: 1,
-                    )
-                  ],
-                ),
-                width: MediaQuery.of(context).size.width * 0.9 - 10,
-                height: 37.0 * options.length,
-                constraints: const BoxConstraints(maxHeight: 138), // 4 * height
-                child: ListView.builder(
-                  itemCount: options.length,
-                  itemBuilder: (BuildContext context, int index) {
-                    {
-                      final ExerciseSearchResult option =
-                          options.elementAt(index);
+              alignment: Alignment.topLeft,
+              child: Material(
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.red,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.25),
+                        offset: const Offset(0, 2),
+                        blurRadius: 0.5,
+                        spreadRadius: 1,
+                      )
+                    ],
+                  ),
+                  width: MediaQuery.of(context).size.width * 0.9 - 10,
+                  height: 34.0 * options.length, // 34 = height of container
+                  constraints:
+                      const BoxConstraints(maxHeight: 126), // 4 * height
+                  child: ListView.builder(
+                    itemCount: options.length,
+                    itemBuilder: (BuildContext context, int index) {
+                      {
+                        final ExerciseSearchResult option =
+                            options.elementAt(index);
 
-                      return GestureDetector(
-                        onTap: () {
-                          routineExerciseListUpdater.addExercise(
-                            RoutineExercise(option.exercise, 5),
-                          );
-                        },
-                        child: option,
-                      );
-                    }
-                  },
+                        return GestureDetector(
+                          onTap: () {
+                            // add exercise to the list of exercies in current routine
+                            routineExerciseList.add(
+                              RoutineExercise(option.exercise, 5),
+                            );
+                          },
+                          child: option,
+                        );
+                      }
+                    },
+                  ),
                 ),
-              ),
-            ),
-          );
+              ));
         },
         optionsBuilder: (TextEditingValue textEditingValue) {
           if (textEditingValue.text == '') {
@@ -169,6 +178,7 @@ class ExerciseSearchAutocomplete extends ConsumerWidget {
             }
           }
 
+          // return exercises that contain the given substring
           return results;
         },
       ),

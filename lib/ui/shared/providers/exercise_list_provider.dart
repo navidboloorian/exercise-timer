@@ -1,15 +1,19 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../classes/exercise.dart';
+
+import '../../../db/DatabaseHelper.dart';
+import '../../../db/models/exercise.dart';
 
 class ExerciseListNotifier extends StateNotifier<List<Exercise>> {
   // set default state to 0
   ExerciseListNotifier() : super(<Exercise>[]);
 
-  void addExercise(Exercise exercise) {
+  void add(Exercise exercise) {
     state = [...state, exercise];
+
+    DatabaseHelper.insertExercise(state);
   }
 
-  void deleteExercise(Exercise exerciseToDelete) {
+  void delete(Exercise exerciseToDelete) {
     state = state
         .where((Exercise exercise) => exercise != exerciseToDelete)
         .toList();
