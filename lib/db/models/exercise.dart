@@ -2,7 +2,7 @@ class Exercise {
   final int? id;
   final String name;
   final String description;
-  final bool isTimed; // might switch to bool later
+  final bool isTimed;
   final bool isWeighted;
   final List<String> tags;
 
@@ -19,9 +19,9 @@ class Exercise {
       : id = map['id'],
         name = map['name'],
         description = map['description'],
-        isTimed = map['isTimed'],
-        isWeighted = map['isWeighted'],
-        tags = map['tags'];
+        isTimed = map['isTimed'] == 1 ? true : false,
+        isWeighted = map['isWeighted'] == 1 ? true : false,
+        tags = map['tags'].split(',');
 
   Map<String, Object?> toMap() {
     return {
@@ -30,7 +30,7 @@ class Exercise {
       'description': description,
       'isTimed': isTimed ? 1 : 0,
       'isWeighted': isWeighted ? 1 : 0,
-      'tags': tags
+      'tags': tags.join(','),
     };
   }
 }

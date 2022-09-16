@@ -17,8 +17,6 @@ class _CreateExerciseState extends ConsumerState<CreateExercise> {
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _tagsController = TextEditingController();
-
-  //
   final _exerciseList = exerciseListProvider;
 
   // create two separate state-tracking notifiers; one for each button
@@ -112,19 +110,16 @@ class _CreateExerciseState extends ConsumerState<CreateExercise> {
                   },
                 ),
               ),
-              const SizedBox(height: 10),
               SwitchButton(
                 falseOption: 'Reps',
                 trueOption: 'Time',
                 switchButtonFamily: _timedSwitchButton,
               ),
-              const SizedBox(height: 10),
               SwitchButton(
                 falseOption: 'Not Weighted',
                 trueOption: 'Weighted',
                 switchButtonFamily: _weightedSwitchButton,
               ),
-              const SizedBox(height: 10),
               DropShadowContainer(
                 child: TextFormField(
                   minLines: 5,
@@ -136,7 +131,6 @@ class _CreateExerciseState extends ConsumerState<CreateExercise> {
                   controller: _descriptionController,
                 ),
               ),
-              const SizedBox(height: 10),
               DropShadowContainer(
                 child: TextFormField(
                   maxLines: null,

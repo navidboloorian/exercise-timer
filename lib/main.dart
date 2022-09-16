@@ -3,22 +3,33 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'utils/themes.dart';
 import 'ui/pages/pages.dart';
+import 'db/DatabaseHelper.dart';
+import 'db/models/shared_models.dart';
+import 'ui/shared/providers/exercise_list_provider.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(const ProviderScope(child: App()));
 }
 
-class App extends StatefulWidget {
-  const App({super.key});
+class App extends ConsumerStatefulWidget {
+  const App({Key? key}) : super(key: key);
 
   @override
-  State<App> createState() => _AppState();
+  ConsumerState<ConsumerStatefulWidget> createState() => _AppState();
 }
 
-class _AppState extends State<App> {
+class _AppState extends ConsumerState<App> {
+  void getExercises() async {
+    List<Exercise> dbExerciseList = await DatabaseHelper.getExercises();
+
+    ref.watch(exerciseListProvider.notifier).set(dbExerciseList);
+  }
+
   @override
   Widget build(BuildContext context) {
+    getExercises();
+
     // list of all navigable pages
     // pass these to other widgets to avoid mistakes on lower levels
     const List<String> pages = <String>['exercises', 'routines', 'market'];

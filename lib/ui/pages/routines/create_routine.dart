@@ -31,21 +31,35 @@ class _CreateRoutineState extends ConsumerState<CreateRoutine> {
 
   @override
   Widget build(BuildContext context) {
-    // list of the exercises in the current routine
+    // list of the current exercises in the current routine
     final routineExerciseList = ref.watch(routineExerciseListProvider);
 
     // render list of widgets to render to the screen
     List<Widget> widgetRenderList = <Widget>[];
 
-    for (RoutineExercise routineExercise in routineExerciseList) {
+    for (int i = 0; i < routineExerciseList.length; i++) {
       widgetRenderList.add(
         RoutineExerciseBox(
-          exercise: routineExercise.exercise,
+          key: Key('$i'),
+          exercise: routineExerciseList[i].exercise,
         ),
       );
+    }
 
-      widgetRenderList.add(
-        const SizedBox(height: 10),
+    // styles the drag style of the items in the list
+    Widget proxyDecorator(
+        Widget child, int index, Animation<double> animation) {
+      return AnimatedBuilder(
+        animation: animation,
+        builder: (BuildContext context, Widget? child) {
+          return Material(
+            elevation: 0,
+            color: CustomColors.darkBackground,
+            shadowColor: CustomColors.darkBackground,
+            child: child,
+          );
+        },
+        child: child,
       );
     }
 
@@ -68,31 +82,50 @@ class _CreateRoutineState extends ConsumerState<CreateRoutine> {
       body: Center(
         child: Form(
           key: _formKey,
-          child: Column(
-            children: [
-              DropShadowContainer(
-                child: TextFormField(
-                  maxLines: null,
-                  maxLength: 75,
-                  decoration: const InputDecoration(
-                    hintText: 'Routine name',
-                    counterText: '',
+          child: SizedBox(
+            width: MediaQuery.of(context).size.width * 0.9,
+            child: ListView(
+              children: [
+                DropShadowContainer(
+                  child: TextFormField(
+                    maxLines: null,
+                    maxLength: 75,
+                    decoration: const InputDecoration(
+                      hintText: 'Routine name',
+                      counterText: '',
+                    ),
+                    controller: _titleController,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'A title is required';
+                      }
+                      return null;
+                    },
                   ),
-                  controller: _titleController,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'A title is required';
-                    }
-                    return null;
-                  },
                 ),
-              ),
-              const SizedBox(height: 10),
-              // display widgets from render list
-              for (Widget routineWidget in widgetRenderList) routineWidget,
-              const ExerciseSearchAutocomplete(),
-              // const AddButton(onPressed: null),
-            ],
+                ReorderableListView(
+                  shrinkWrap: true,
+                  proxyDecorator: proxyDecorator,
+                  onReorder: ((oldIndex, newIndex) {
+                    setState(
+                      () {
+                        if (oldIndex < newIndex) {
+                          newIndex -= 1;
+                        }
+
+                        final Widget exercise =
+                            widgetRenderList.removeAt(oldIndex);
+                        widgetRenderList.insert(newIndex, exercise);
+                      },
+                    );
+                  }),
+                  children: widgetRenderList,
+                ),
+
+                const ExerciseSearchAutocomplete(),
+                // const AddButton(onPressed: null),
+              ],
+            ),
           ),
         ),
       ),
@@ -126,7 +159,7 @@ class ExerciseSearchAutocomplete extends ConsumerWidget {
               child: Material(
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.red,
+                    color: CustomColors.darkBackground,
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withOpacity(0.25),
@@ -175,6 +208,18 @@ class ExerciseSearchAutocomplete extends ConsumerWidget {
                 .toLowerCase()
                 .contains(textEditingValue.text.toLowerCase())) {
               results.add(option);
+              break;
+            }
+
+            // search through each exercise's tag as well as its name
+            for (String tag in option.exercise.tags) {
+              if (tag
+                  .toLowerCase()
+                  .contains(textEditingValue.text.toLowerCase())) {
+                results.add(option);
+                // only want one exercise to be added per tag, avoids duplicates
+                break;
+              }
             }
           }
 
@@ -203,6 +248,12 @@ class ExerciseSearchResult extends ConsumerWidget {
           Text(exercise.name),
           // move plus icon to the right of the box
           const Spacer(),
+          for (String tag in exercise.tags) ...[
+            TagBox(tag: tag),
+            const SizedBox(
+              width: 2,
+            ),
+          ],
           const Icon(Icons.add),
         ],
       ),
@@ -213,7 +264,7 @@ class ExerciseSearchResult extends ConsumerWidget {
 class RoutineExerciseBox extends ConsumerWidget {
   final Exercise exercise;
 
-  const RoutineExerciseBox({Key? key, required this.exercise})
+  const RoutineExerciseBox({required Key key, required this.exercise})
       : super(key: key);
 
   @override

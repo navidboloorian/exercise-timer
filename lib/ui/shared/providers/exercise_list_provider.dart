@@ -7,6 +7,10 @@ class ExerciseListNotifier extends StateNotifier<List<Exercise>> {
   // set default state to 0
   ExerciseListNotifier() : super(<Exercise>[]);
 
+  void set(List<Exercise> exercises) {
+    state = exercises;
+  }
+
   void add(Exercise exercise) {
     state = [...state, exercise];
 

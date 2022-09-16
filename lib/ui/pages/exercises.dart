@@ -38,12 +38,6 @@ class Exercises extends ConsumerWidget {
             ),
           ),
         );
-
-        widgetList.add(
-          const SizedBox(
-            height: 10,
-          ),
-        );
       }
 
       return widgetList;

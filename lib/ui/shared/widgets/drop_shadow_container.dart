@@ -1,4 +1,6 @@
+import 'package:exercise_timer/ui/shared/widgets/shared_widgets.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 import '../../../utils/colors.dart';
 
@@ -24,27 +26,7 @@ class DropShadowContainer extends StatelessWidget {
 
     // convert tags from text to containers with borders for display purposes
     for (String tag in tags) {
-      tagBoxes.add(
-        Container(
-          padding: const EdgeInsets.only(left: 5, right: 5),
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: Colors.white,
-              width: 1,
-              style: BorderStyle.solid,
-            ),
-            borderRadius: const BorderRadius.all(
-              Radius.circular(100),
-            ),
-          ),
-          child: Center(
-            child: Text(
-              tag,
-              style: const TextStyle(fontSize: 10),
-            ),
-          ),
-        ),
-      );
+      tagBoxes.add(TagBox(tag: tag));
 
       tagBoxes.add(const SizedBox(width: 3));
     }
@@ -53,6 +35,8 @@ class DropShadowContainer extends StatelessWidget {
       onTap: () => onTap,
       child: Container(
         width: MediaQuery.of(context).size.width * 0.9,
+        margin: const EdgeInsets.only(bottom: 10),
+        constraints: const BoxConstraints(maxHeight: 100),
         // switches have their own padding to avoid glitchy display
         padding: hasPadding
             ? const EdgeInsets.only(

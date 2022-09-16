@@ -112,19 +112,16 @@ class _ViewExerciseState extends ConsumerState<ViewExercise> {
                   },
                 ),
               ),
-              const SizedBox(height: 10),
               SwitchButton(
                 falseOption: 'Reps',
                 trueOption: 'Time',
                 switchButtonFamily: _timedSwitchButton,
               ),
-              const SizedBox(height: 10),
               SwitchButton(
                 falseOption: 'Not Weighted',
                 trueOption: 'Weighted',
                 switchButtonFamily: _weightedSwitchButton,
               ),
-              const SizedBox(height: 10),
               DropShadowContainer(
                 child: TextFormField(
                   minLines: 5,
@@ -136,7 +133,6 @@ class _ViewExerciseState extends ConsumerState<ViewExercise> {
                   controller: _descriptionController,
                 ),
               ),
-              const SizedBox(height: 10),
               DropShadowContainer(
                 child: TextFormField(
                   maxLines: null,
@@ -147,7 +143,6 @@ class _ViewExerciseState extends ConsumerState<ViewExercise> {
                   controller: _tagsController,
                 ),
               ),
-              const SizedBox(height: 10),
               DropShadowContainer(
                 child: TextFormField(
                   maxLines: null,
