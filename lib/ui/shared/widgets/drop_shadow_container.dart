@@ -1,13 +1,11 @@
 import 'package:exercise_timer/ui/shared/widgets/shared_widgets.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 
 import '../../../utils/colors.dart';
 
 class DropShadowContainer extends StatelessWidget {
   final Widget child;
   final List<String> tags;
-  final Function? onTap;
   final bool hasPadding;
   final Color color;
 
@@ -15,7 +13,6 @@ class DropShadowContainer extends StatelessWidget {
     super.key,
     required this.child,
     this.tags = const <String>[],
-    this.onTap,
     this.hasPadding = true,
     this.color = CustomColors.darkBackground,
   });
@@ -31,46 +28,43 @@ class DropShadowContainer extends StatelessWidget {
       tagBoxes.add(const SizedBox(width: 3));
     }
 
-    return GestureDetector(
-      onTap: () => onTap,
-      child: Container(
-        width: MediaQuery.of(context).size.width * 0.9,
-        margin: const EdgeInsets.only(bottom: 10),
-        constraints: const BoxConstraints(maxHeight: 100),
-        // switches have their own padding to avoid glitchy display
-        padding: hasPadding
-            ? const EdgeInsets.only(
-                left: 5,
-                right: 5,
-                bottom: 5,
-              )
-            : null,
-        decoration: BoxDecoration(
-          color: color,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.25),
-              offset: const Offset(0, 2),
-              blurRadius: 0.5,
-              spreadRadius: 1,
+    return Container(
+      width: MediaQuery.of(context).size.width * 0.9,
+      margin: const EdgeInsets.only(bottom: 10),
+      constraints: const BoxConstraints(maxHeight: 500),
+      // switches have their own padding to avoid glitchy display
+      padding: hasPadding
+          ? const EdgeInsets.only(
+              left: 5,
+              right: 5,
+              bottom: 5,
             )
-          ],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Align(alignment: Alignment.centerLeft, child: child),
+          : null,
+      decoration: BoxDecoration(
+        color: color,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.25),
+            offset: const Offset(0, 2),
+            blurRadius: 0.5,
+            spreadRadius: 1,
+          )
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Align(alignment: Alignment.centerLeft, child: child),
 
-            // conditionally render tags portion of container
-            if (tags.isNotEmpty) ...[
-              const SizedBox(height: 3),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Row(children: tagBoxes),
-              ),
-            ],
+          // conditionally render tags portion of container
+          if (tags.isNotEmpty) ...[
+            const SizedBox(height: 3),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Row(children: tagBoxes),
+            ),
           ],
-        ),
+        ],
       ),
     );
   }

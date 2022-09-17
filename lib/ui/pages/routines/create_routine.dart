@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../shared/widgets/shared_widgets.dart';
@@ -19,32 +20,44 @@ class _CreateRoutineState extends ConsumerState<CreateRoutine> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   // used to manipulate the text in the corresponding text fields
-  final _titleController = TextEditingController();
-  final _descriptionController = TextEditingController();
+  final _nameController = TextEditingController();
 
   @override
   void dispose() {
-    _titleController.dispose();
-    _descriptionController.dispose();
+    _nameController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     // list of the current exercises in the current routine
-    final routineExerciseList = ref.watch(routineExerciseListProvider);
+    final routineExerciseListRead = ref.watch(routineExerciseListProvider);
+    final routineExerciseList = ref.watch(routineExerciseListProvider.notifier);
 
-    // render list of widgets to render to the screen
-    List<Widget> widgetRenderList = <Widget>[];
-
-    for (int i = 0; i < routineExerciseList.length; i++) {
-      widgetRenderList.add(
-        RoutineExerciseBox(
-          key: Key('$i'),
-          exercise: routineExerciseList[i].exercise,
+    Widget buildWidget(int index, RoutineExercise exercise) {
+      return Dismissible(
+        background: Container(
+          height: 10,
+          color: CustomColors.removeRed,
+          child: const Center(child: Icon(Icons.remove_circle)),
+        ),
+        key: UniqueKey(),
+        onDismissed: (direction) {
+          routineExerciseList.delete(exercise);
+        },
+        child: RoutineExerciseBox(
+          key: UniqueKey(),
+          routineExercise: routineExerciseListRead[index],
         ),
       );
     }
+
+    // generate list of widgets to render to the screen
+    List<Widget> widgetList() => routineExerciseListRead
+        .asMap()
+        .map((index, exercise) => MapEntry(index, buildWidget(index, exercise)))
+        .values
+        .toList();
 
     // styles the drag style of the items in the list
     Widget proxyDecorator(
@@ -85,6 +98,7 @@ class _CreateRoutineState extends ConsumerState<CreateRoutine> {
           child: SizedBox(
             width: MediaQuery.of(context).size.width * 0.9,
             child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
               children: [
                 DropShadowContainer(
                   child: TextFormField(
@@ -94,35 +108,29 @@ class _CreateRoutineState extends ConsumerState<CreateRoutine> {
                       hintText: 'Routine name',
                       counterText: '',
                     ),
-                    controller: _titleController,
+                    controller: _nameController,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'A title is required';
+                        return 'A name is required';
                       }
                       return null;
                     },
                   ),
                 ),
                 ReorderableListView(
+                  physics: const NeverScrollableScrollPhysics(),
                   shrinkWrap: true,
                   proxyDecorator: proxyDecorator,
                   onReorder: ((oldIndex, newIndex) {
-                    setState(
-                      () {
-                        if (oldIndex < newIndex) {
-                          newIndex -= 1;
-                        }
-
-                        final Widget exercise =
-                            widgetRenderList.removeAt(oldIndex);
-                        widgetRenderList.insert(newIndex, exercise);
-                      },
-                    );
+                    routineExerciseList.updatePosition(oldIndex, newIndex);
                   }),
-                  children: widgetRenderList,
+                  children: widgetList(),
                 ),
-
                 const ExerciseSearchAutocomplete(),
+                // extra padding to account for autocomplete hint menu
+                Padding(
+                    padding: EdgeInsets.only(
+                        bottom: MediaQuery.of(context).viewInsets.bottom))
                 // const AddButton(onPressed: null),
               ],
             ),
@@ -155,45 +163,45 @@ class ExerciseSearchAutocomplete extends ConsumerWidget {
       child: Autocomplete<ExerciseSearchResult>(
         optionsViewBuilder: (context, onSelected, options) {
           return Align(
-              alignment: Alignment.topLeft,
-              child: Material(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: CustomColors.darkBackground,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.25),
-                        offset: const Offset(0, 2),
-                        blurRadius: 0.5,
-                        spreadRadius: 1,
-                      )
-                    ],
-                  ),
-                  width: MediaQuery.of(context).size.width * 0.9 - 10,
-                  height: 34.0 * options.length, // 34 = height of container
-                  constraints:
-                      const BoxConstraints(maxHeight: 126), // 4 * height
-                  child: ListView.builder(
-                    itemCount: options.length,
-                    itemBuilder: (BuildContext context, int index) {
-                      {
-                        final ExerciseSearchResult option =
-                            options.elementAt(index);
-
-                        return GestureDetector(
-                          onTap: () {
-                            // add exercise to the list of exercies in current routine
-                            routineExerciseList.add(
-                              RoutineExercise(option.exercise, 5),
-                            );
-                          },
-                          child: option,
-                        );
-                      }
-                    },
-                  ),
+            alignment: Alignment.topLeft,
+            child: Material(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: CustomColors.darkBackground,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.25),
+                      offset: const Offset(0, 2),
+                      blurRadius: 0.5,
+                      spreadRadius: 1,
+                    )
+                  ],
                 ),
-              ));
+                width: MediaQuery.of(context).size.width * 0.9 - 10,
+                height: 34.0 * options.length, // 34 = height of container
+                constraints: const BoxConstraints(maxHeight: 126), // 4 * height
+                child: ListView.builder(
+                  itemCount: options.length,
+                  itemBuilder: (BuildContext context, int index) {
+                    {
+                      final ExerciseSearchResult option =
+                          options.elementAt(index);
+
+                      return GestureDetector(
+                        onTap: () {
+                          // add exercise to the list of exercies in current routine
+                          routineExerciseList.add(
+                            RoutineExercise(option.exercise, 5),
+                          );
+                        },
+                        child: option,
+                      );
+                    }
+                  },
+                ),
+              ),
+            ),
+          );
         },
         optionsBuilder: (TextEditingValue textEditingValue) {
           if (textEditingValue.text == '') {
@@ -262,24 +270,60 @@ class ExerciseSearchResult extends ConsumerWidget {
 }
 
 class RoutineExerciseBox extends ConsumerWidget {
-  final Exercise exercise;
+  final RoutineExercise routineExercise;
+  Exercise exercise;
+  final int? weight;
+  final int? reps;
+  final int? time;
 
-  const RoutineExerciseBox({required Key key, required this.exercise})
-      : super(key: key);
+  RoutineExerciseBox({
+    Key? key,
+    required this.routineExercise,
+    this.weight,
+    this.reps,
+    this.time,
+  })  : exercise = routineExercise.exercise,
+        super(key: key);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return DropShadowContainer(
-      child: Row(
-        children: [
-          Text(exercise.name),
-          const Spacer(),
-          const IconButton(
-            onPressed: null,
-            icon: Icon(Icons.remove_circle, color: Colors.white),
-          )
-        ],
+      child: GestureDetector(
+        onHorizontalDragEnd: (details) {
+          if (details.primaryVelocity! > 0) print("left");
+          print('here');
+        },
+        child: Row(
+          children: [
+            Text(exercise.name),
+            const Spacer(),
+            SizedBox(
+              width: 100,
+              child: TextField(
+                inputFormatters: [TimerInputFormatter()],
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: false),
+                decoration: const InputDecoration(
+                  hintText: '00:00',
+                ),
+              ),
+            )
+          ],
+        ),
       ),
     );
+  }
+}
+
+class TimerInputFormatter extends TextInputFormatter {
+  final RegExp _expression;
+
+  TimerInputFormatter() : _expression = RegExp(r'^[0-9:]+$');
+
+  @override
+  TextEditingValue formatEditUpdate(
+      TextEditingValue oldValue, TextEditingValue newValue) {
+    // TODO: implement formatEditUpdate
+    throw UnimplementedError();
   }
 }

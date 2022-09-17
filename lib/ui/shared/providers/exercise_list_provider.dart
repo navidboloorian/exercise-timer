@@ -14,7 +14,7 @@ class ExerciseListNotifier extends StateNotifier<List<Exercise>> {
   void add(Exercise exercise) {
     state = [...state, exercise];
 
-    DatabaseHelper.insertExercise(state);
+    DatabaseHelper.insertExercise(exercise);
   }
 
   void delete(Exercise exerciseToDelete) {

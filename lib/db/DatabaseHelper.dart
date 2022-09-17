@@ -42,12 +42,10 @@ class DatabaseHelper {
     );
   }
 
-  static Future<void> insertExercise(List<Exercise> exercises) async {
+  static Future<void> insertExercise(Exercise exercise) async {
     final Database db = await initializeDB();
 
-    for (var exercise in exercises) {
-      await db.insert('exercises', exercise.toMap());
-    }
+    await db.insert('exercises', exercise.toMap());
   }
 
   static Future<List<Exercise>> getExercises() async {

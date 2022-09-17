@@ -21,7 +21,7 @@ class Exercise {
         description = map['description'],
         isTimed = map['isTimed'] == 1 ? true : false,
         isWeighted = map['isWeighted'] == 1 ? true : false,
-        tags = map['tags'].split(',');
+        tags = map['tags'].isNotEmpty ? map['tags'].split(',') : [];
 
   Map<String, Object?> toMap() {
     return {

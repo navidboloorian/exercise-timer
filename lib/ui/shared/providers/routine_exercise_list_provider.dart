@@ -9,10 +9,22 @@ class RoutineExerciseListNotifier extends StateNotifier<List<RoutineExercise>> {
     state = [...state, exercise];
   }
 
-  void delete(RoutineExercise exerciseToDelete) {
-    state = state
-        .where((RoutineExercise exercise) => exercise != exerciseToDelete)
-        .toList();
+  void updatePosition(int oldIndex, int newIndex) {
+    if (oldIndex < newIndex) {
+      newIndex -= 1;
+    }
+
+    final RoutineExercise exercise = state.removeAt(oldIndex);
+    state.insert(newIndex, exercise);
+
+    state = state;
+  }
+
+  void delete(RoutineExercise exercise) {
+    state.remove(exercise);
+    state = state;
+
+    print(state);
   }
 
   void clearExercises() {
