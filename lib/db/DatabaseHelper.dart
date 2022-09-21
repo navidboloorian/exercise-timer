@@ -1,10 +1,9 @@
 import 'dart:io';
 
-import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
-import 'models/exercise.dart';
+import 'models/shared_models.dart';
 
 class DatabaseHelper {
   static const String _dbName = 'local.db';
@@ -14,6 +13,7 @@ class DatabaseHelper {
   static const String _isWeightedCol = 'isWeighted';
   static const String _isTimedCol = 'isTimed';
   static const String _tagsCol = 'tags';
+  static const String _exerciseListCol = 'exerciseList';
 
   static Future<Database> initializeDB() async {
     // gets the default database location
@@ -34,7 +34,14 @@ class DatabaseHelper {
               $_isWeightedCol INTEGER NOT NULL, 
               $_isTimedCol INTEGER NOT NULL,
               $_tagsCol STRING
-            )
+            );
+            CREATE TABLE routines 
+            (
+              $_idCol INTEGER PRIMARY KEY AUTOINCREMENT, 
+              $_nameCol TEXT NOT NULL, 
+              $_descriptionCol TEXT,
+              $_exerciseListCol TEXT
+            );
           ''',
         );
       },
@@ -55,11 +62,34 @@ class DatabaseHelper {
     return queryResult.map((exercise) => Exercise.fromMap(exercise)).toList();
   }
 
-  static Future<void> delete(int id) async {
+  static Future<void> deleteExercise(int id) async {
     final Database db = await initializeDB();
 
     await db.delete(
       'exercises',
+      where: 'id=?',
+      whereArgs: [id],
+    );
+  }
+
+  static Future<void> insertRoutine(Routine routine) async {
+    final Database db = await initializeDB();
+
+    await db.insert('routines', routine.toMap());
+  }
+
+  static Future<List<Routine>> getRoutines() async {
+    final Database db = await initializeDB();
+    final List<Map<String, Object?>> queryResult = await db.query('exercises');
+
+    return queryResult.map((routine) => Routine.fromMap(routine)).toList();
+  }
+
+  static Future<void> deleteRoutine(int id) async {
+    final Database db = await initializeDB();
+
+    await db.delete(
+      'routines',
       where: 'id=?',
       whereArgs: [id],
     );

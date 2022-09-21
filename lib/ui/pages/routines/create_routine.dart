@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../shared/widgets/shared_widgets.dart';
 import '../../shared/classes/shared_classes.dart';
 import '../../shared/providers/shared_providers.dart';
-import '../../../db/models/exercise.dart';
+import '../../../db/models/shared_models.dart';
 import '../../../utils/colors.dart';
+
+final formKey = GlobalKey();
 
 class CreateRoutine extends ConsumerStatefulWidget {
   const CreateRoutine({Key? key}) : super(key: key);
@@ -22,6 +23,9 @@ class _CreateRoutineState extends ConsumerState<CreateRoutine> {
   // used to manipulate the text in the corresponding text fields
   final _nameController = TextEditingController();
 
+  final List<TextEditingController> timeControllerList =
+      <TextEditingController>[];
+
   @override
   void dispose() {
     _nameController.dispose();
@@ -35,9 +39,12 @@ class _CreateRoutineState extends ConsumerState<CreateRoutine> {
     final routineExerciseList = ref.watch(routineExerciseListProvider.notifier);
 
     Widget buildWidget(int index, RoutineExercise exercise) {
+      timeControllerList.add(TextEditingController());
+
       return Dismissible(
         background: Container(
           height: 10,
+          width: MediaQuery.of(context).size.width * 0.9,
           color: CustomColors.removeRed,
           child: const Center(child: Icon(Icons.remove_circle)),
         ),
@@ -46,6 +53,7 @@ class _CreateRoutineState extends ConsumerState<CreateRoutine> {
           routineExerciseList.delete(exercise);
         },
         child: RoutineExerciseBox(
+          timeController: timeControllerList[index],
           key: UniqueKey(),
           routineExercise: routineExerciseListRead[index],
         ),
@@ -53,7 +61,7 @@ class _CreateRoutineState extends ConsumerState<CreateRoutine> {
     }
 
     // generate list of widgets to render to the screen
-    List<Widget> widgetList() => routineExerciseListRead
+    List<Widget> getRoutineExerciseList() => routineExerciseListRead
         .asMap()
         .map((index, exercise) => MapEntry(index, buildWidget(index, exercise)))
         .values
@@ -76,76 +84,107 @@ class _CreateRoutineState extends ConsumerState<CreateRoutine> {
       );
     }
 
+    int toSeconds(String time) {
+      String secondString = time.substring(0, 2);
+      String minuteString = time.substring(3, 5);
+
+      int seconds = int.parse(secondString) + int.parse(minuteString) * 60;
+
+      return seconds;
+    }
+
+    void submitForm() {
+      if (_formKey.currentState!.validate()) {
+        String name = _nameController.text;
+        String description = 'blank';
+        List<RoutineExercise> exerciseList = <RoutineExercise>[];
+
+        for (int i = 0; i < routineExerciseListRead.length; i++) {
+          Exercise exercise = routineExerciseListRead[i].exercise;
+
+          exerciseList.add(
+            RoutineExercise(exercise, toSeconds(timeControllerList[i].text)),
+          );
+        }
+
+        Routine(
+            name: name, description: description, exerciseList: exerciseList);
+      }
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Create Routine'),
-        actions: const [
+        actions: [
           IconButton(
-            onPressed: null,
-            icon: Icon(
+            onPressed: submitForm,
+            icon: const Icon(
               Icons.check,
               color: Colors.white,
             ),
           ),
-          SizedBox(
+          const SizedBox(
             width: 10,
           )
         ],
       ),
-      body: Center(
-        child: Form(
-          key: _formKey,
-          child: SizedBox(
-            width: MediaQuery.of(context).size.width * 0.9,
-            child: ListView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              children: [
-                DropShadowContainer(
-                  child: TextFormField(
-                    maxLines: null,
-                    maxLength: 75,
-                    decoration: const InputDecoration(
-                      hintText: 'Routine name',
-                      counterText: '',
+      body: Form(
+        key: _formKey,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            Center(
+              child: Column(
+                children: [
+                  DropShadowContainer(
+                    child: TextFormField(
+                      maxLines: null,
+                      maxLength: 75,
+                      decoration: const InputDecoration(
+                        hintText: 'Routine name',
+                        counterText: '',
+                      ),
+                      controller: _nameController,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'A name is required';
+                        }
+                        return null;
+                      },
                     ),
-                    controller: _nameController,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'A name is required';
-                      }
-                      return null;
-                    },
                   ),
-                ),
-                ReorderableListView(
-                  physics: const NeverScrollableScrollPhysics(),
-                  shrinkWrap: true,
-                  proxyDecorator: proxyDecorator,
-                  onReorder: ((oldIndex, newIndex) {
-                    routineExerciseList.updatePosition(oldIndex, newIndex);
-                  }),
-                  children: widgetList(),
-                ),
-                const ExerciseSearchAutocomplete(),
-                // extra padding to account for autocomplete hint menu
-                Padding(
-                    padding: EdgeInsets.only(
-                        bottom: MediaQuery.of(context).viewInsets.bottom))
-                // const AddButton(onPressed: null),
-              ],
+                  ReorderableListView(
+                    physics: const NeverScrollableScrollPhysics(),
+                    shrinkWrap: true,
+                    proxyDecorator: proxyDecorator,
+                    onReorder: ((oldIndex, newIndex) {
+                      routineExerciseList.updatePosition(oldIndex, newIndex);
+                    }),
+                    children: getRoutineExerciseList(),
+                  ),
+                  const ExerciseSearchAutocomplete(),
+                ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );
   }
 }
 
-class ExerciseSearchAutocomplete extends ConsumerWidget {
+class ExerciseSearchAutocomplete extends ConsumerStatefulWidget {
   const ExerciseSearchAutocomplete({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ConsumerStatefulWidget> createState() =>
+      _ExerciseSearchAutocompleteState();
+}
+
+class _ExerciseSearchAutocompleteState
+    extends ConsumerState<ExerciseSearchAutocomplete> {
+  @override
+  Widget build(BuildContext context) {
     // list of the current exercises in the current routine
     final routineExerciseList = ref.watch(routineExerciseListProvider.notifier);
 
@@ -160,7 +199,17 @@ class ExerciseSearchAutocomplete extends ConsumerWidget {
     }
 
     return DropShadowContainer(
-      child: Autocomplete<ExerciseSearchResult>(
+      child: RawAutocomplete<ExerciseSearchResult>(
+        fieldViewBuilder:
+            ((context, textEditingController, focusNode, onFieldSubmitted) =>
+                TextFormField(
+                  controller: textEditingController,
+                  focusNode: focusNode,
+                  decoration: const InputDecoration(hintText: 'Exercises...'),
+                  onFieldSubmitted: (String value) {
+                    onFieldSubmitted();
+                  },
+                )),
         optionsViewBuilder: (context, onSelected, options) {
           return Align(
             alignment: Alignment.topLeft,
@@ -203,7 +252,7 @@ class ExerciseSearchAutocomplete extends ConsumerWidget {
             ),
           );
         },
-        optionsBuilder: (TextEditingValue textEditingValue) {
+        optionsBuilder: (textEditingValue) {
           if (textEditingValue.text == '') {
             return const Iterable<ExerciseSearchResult>.empty();
           }
@@ -269,15 +318,17 @@ class ExerciseSearchResult extends ConsumerWidget {
   }
 }
 
-class RoutineExerciseBox extends ConsumerWidget {
+class RoutineExerciseBox extends ConsumerStatefulWidget {
+  final TextEditingController timeController;
   final RoutineExercise routineExercise;
-  Exercise exercise;
+  final Exercise exercise;
   final int? weight;
   final int? reps;
   final int? time;
 
   RoutineExerciseBox({
     Key? key,
+    required this.timeController,
     required this.routineExercise,
     this.weight,
     this.reps,
@@ -286,44 +337,35 @@ class RoutineExerciseBox extends ConsumerWidget {
         super(key: key);
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return DropShadowContainer(
-      child: GestureDetector(
-        onHorizontalDragEnd: (details) {
-          if (details.primaryVelocity! > 0) print("left");
-          print('here');
-        },
-        child: Row(
-          children: [
-            Text(exercise.name),
-            const Spacer(),
-            SizedBox(
-              width: 100,
-              child: TextField(
-                inputFormatters: [TimerInputFormatter()],
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: false),
-                decoration: const InputDecoration(
-                  hintText: '00:00',
-                ),
-              ),
-            )
-          ],
-        ),
-      ),
-    );
-  }
+  ConsumerState<ConsumerStatefulWidget> createState() =>
+      _RoutineExerciseBoxState();
 }
 
-class TimerInputFormatter extends TextInputFormatter {
-  final RegExp _expression;
-
-  TimerInputFormatter() : _expression = RegExp(r'^[0-9:]+$');
-
+class _RoutineExerciseBoxState extends ConsumerState<RoutineExerciseBox> {
   @override
-  TextEditingValue formatEditUpdate(
-      TextEditingValue oldValue, TextEditingValue newValue) {
-    // TODO: implement formatEditUpdate
-    throw UnimplementedError();
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        SizedBox(width: MediaQuery.of(context).size.width * .05),
+        DropShadowContainer(
+          child: Row(
+            children: [
+              Text(widget.exercise.name),
+              const Spacer(),
+              SizedBox(
+                width: 50,
+                child: TextField(
+                  controller: widget.timeController,
+                  decoration: const InputDecoration(hintText: '00:00'),
+                  inputFormatters: [
+                    TimerInputFormatter(),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 }

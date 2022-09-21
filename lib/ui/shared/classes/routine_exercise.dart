@@ -7,8 +7,6 @@ class RoutineExercise {
   int? time;
   int? reps;
 
-  RoutineExercise(
-    this.exercise,
-    this.rest,
-  );
+  RoutineExercise(this.exercise, this.rest,
+      {this.weight, this.time, this.reps});
 }
