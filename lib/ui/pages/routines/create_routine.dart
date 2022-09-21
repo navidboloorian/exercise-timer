@@ -55,8 +55,8 @@ class _CreateRoutineState extends ConsumerState<CreateRoutine> {
           routineExerciseList.delete(exercise);
         },
         child: RoutineExerciseBox(
-          timeController: timeControllerList[index],
           key: UniqueKey(),
+          timeController: timeControllerList[index],
           routineExercise: routineExerciseListRead[index],
         ),
       );
@@ -86,16 +86,6 @@ class _CreateRoutineState extends ConsumerState<CreateRoutine> {
       );
     }
 
-    int toSeconds(String time) {
-      // because of right-to-left, substring indices are flipped
-      int minutes = int.parse(time.substring(0, 2));
-      int seconds = int.parse(time.substring(3, 5));
-
-      seconds += minutes * 60;
-
-      return seconds;
-    }
-
     void submitForm() {
       if (_formKey.currentState!.validate()) {
         String name = _nameController.text;
@@ -106,7 +96,8 @@ class _CreateRoutineState extends ConsumerState<CreateRoutine> {
           Exercise exercise = routineExerciseListRead[i].exercise;
 
           exerciseList.add(
-            RoutineExercise(exercise, toSeconds(timeControllerList[i].text)),
+            RoutineExercise(
+                exercise, TimeValidation.toSeconds(timeControllerList[i].text)),
           );
         }
 
@@ -162,6 +153,16 @@ class _CreateRoutineState extends ConsumerState<CreateRoutine> {
                     proxyDecorator: proxyDecorator,
                     onReorder: ((oldIndex, newIndex) {
                       routineExerciseList.updatePosition(oldIndex, newIndex);
+
+                      if (oldIndex < newIndex) {
+                        newIndex -= 1;
+                      }
+
+                      setState(() {
+                        final TextEditingController timeContoller =
+                            timeControllerList.removeAt(oldIndex);
+                        timeControllerList.insert(newIndex, timeContoller);
+                      });
                     }),
                     children: getRoutineExerciseList(),
                   ),
@@ -347,33 +348,6 @@ class RoutineExerciseBox extends ConsumerStatefulWidget {
 class _RoutineExerciseBoxState extends ConsumerState<RoutineExerciseBox> {
   @override
   Widget build(BuildContext context) {
-    // converts overflowing minutes/seconds (> 60 in either field) to a valid time
-    void makeTimeValid(String time) {
-      // because of right-to-left input, substring indices are flipped
-      int minutes = int.parse(time.substring(0, 2));
-      int seconds = int.parse(time.substring(3, 5));
-
-      if (seconds >= 60 || minutes >= 60) {
-        if (seconds >= 60) {
-          minutes++;
-          seconds -= 60;
-        }
-
-        if (minutes >= 60) {
-          minutes = 59;
-        }
-
-        String validatedTime = '$minutes:$seconds';
-
-        if (validatedTime.length < 5) {
-          // pad extra zero in minutes column
-          validatedTime = '0$validatedTime';
-        }
-
-        widget.timeController.text = validatedTime;
-      }
-    }
-
     return Row(
       children: [
         SizedBox(width: MediaQuery.of(context).size.width * .05),
@@ -387,7 +361,8 @@ class _RoutineExerciseBoxState extends ConsumerState<RoutineExerciseBox> {
                 child: Focus(
                   onFocusChange: (hasFocus) {
                     if (!hasFocus) {
-                      makeTimeValid(widget.timeController.text);
+                      TimeValidation.validate(
+                          widget.timeController.text, widget.timeController);
                     }
                   },
                   child: TextField(
