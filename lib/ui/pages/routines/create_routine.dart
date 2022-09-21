@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -85,10 +87,11 @@ class _CreateRoutineState extends ConsumerState<CreateRoutine> {
     }
 
     int toSeconds(String time) {
-      String secondString = time.substring(0, 2);
-      String minuteString = time.substring(3, 5);
+      // because of right-to-left, substring indices are flipped
+      int minutes = int.parse(time.substring(0, 2));
+      int seconds = int.parse(time.substring(3, 5));
 
-      int seconds = int.parse(secondString) + int.parse(minuteString) * 60;
+      seconds += minutes * 60;
 
       return seconds;
     }
@@ -344,6 +347,33 @@ class RoutineExerciseBox extends ConsumerStatefulWidget {
 class _RoutineExerciseBoxState extends ConsumerState<RoutineExerciseBox> {
   @override
   Widget build(BuildContext context) {
+    // converts overflowing minutes/seconds (> 60 in either field) to a valid time
+    void makeTimeValid(String time) {
+      // because of right-to-left input, substring indices are flipped
+      int minutes = int.parse(time.substring(0, 2));
+      int seconds = int.parse(time.substring(3, 5));
+
+      if (seconds >= 60 || minutes >= 60) {
+        if (seconds >= 60) {
+          minutes++;
+          seconds -= 60;
+        }
+
+        if (minutes >= 60) {
+          minutes = 59;
+        }
+
+        String validatedTime = '$minutes:$seconds';
+
+        if (validatedTime.length < 5) {
+          // pad extra zero in minutes column
+          validatedTime = '0$validatedTime';
+        }
+
+        widget.timeController.text = validatedTime;
+      }
+    }
+
     return Row(
       children: [
         SizedBox(width: MediaQuery.of(context).size.width * .05),
@@ -354,12 +384,19 @@ class _RoutineExerciseBoxState extends ConsumerState<RoutineExerciseBox> {
               const Spacer(),
               SizedBox(
                 width: 50,
-                child: TextField(
-                  controller: widget.timeController,
-                  decoration: const InputDecoration(hintText: '00:00'),
-                  inputFormatters: [
-                    TimerInputFormatter(),
-                  ],
+                child: Focus(
+                  onFocusChange: (hasFocus) {
+                    if (!hasFocus) {
+                      makeTimeValid(widget.timeController.text);
+                    }
+                  },
+                  child: TextField(
+                    controller: widget.timeController,
+                    decoration: const InputDecoration(hintText: '00:00'),
+                    inputFormatters: [
+                      TimerInputFormatter(),
+                    ],
+                  ),
                 ),
               ),
             ],
