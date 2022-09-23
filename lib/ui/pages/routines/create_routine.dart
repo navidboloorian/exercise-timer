@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../shared/widgets/shared_widgets.dart';
@@ -25,12 +26,21 @@ class _CreateRoutineState extends ConsumerState<CreateRoutine> {
   // used to manipulate the text in the corresponding text fields
   final _nameController = TextEditingController();
 
-  final List<TextEditingController> timeControllerList =
+  final List<TextEditingController> restControllerList =
+      <TextEditingController>[];
+  final List<TextEditingController> setControllerList =
+      <TextEditingController>[];
+  final List<TextEditingController> repTimeControllerList =
+      <TextEditingController>[];
+  final List<TextEditingController> weightControllerList =
       <TextEditingController>[];
 
   @override
   void dispose() {
     _nameController.dispose();
+
+    // TODO: dispose of all controllers
+
     super.dispose();
   }
 
@@ -41,7 +51,10 @@ class _CreateRoutineState extends ConsumerState<CreateRoutine> {
     final routineExerciseList = ref.watch(routineExerciseListProvider.notifier);
 
     Widget buildWidget(int index, RoutineExercise exercise) {
-      timeControllerList.add(TextEditingController());
+      restControllerList.add(TextEditingController());
+      setControllerList.add(TextEditingController(text: '1'));
+      repTimeControllerList.add(TextEditingController());
+      weightControllerList.add(TextEditingController(text: '1'));
 
       return Dismissible(
         background: Container(
@@ -56,7 +69,10 @@ class _CreateRoutineState extends ConsumerState<CreateRoutine> {
         },
         child: RoutineExerciseBox(
           key: UniqueKey(),
-          timeController: timeControllerList[index],
+          restController: restControllerList[index],
+          setController: setControllerList[index],
+          repTimeController: repTimeControllerList[index],
+          weightController: weightControllerList[index],
           routineExercise: routineExerciseListRead[index],
         ),
       );
@@ -97,7 +113,7 @@ class _CreateRoutineState extends ConsumerState<CreateRoutine> {
 
           exerciseList.add(
             RoutineExercise(
-                exercise, TimeValidation.toSeconds(timeControllerList[i].text)),
+                exercise, TimeValidation.toSeconds(restControllerList[i].text)),
           );
         }
 
@@ -159,9 +175,18 @@ class _CreateRoutineState extends ConsumerState<CreateRoutine> {
                       }
 
                       setState(() {
-                        final TextEditingController timeContoller =
-                            timeControllerList.removeAt(oldIndex);
-                        timeControllerList.insert(newIndex, timeContoller);
+                        final TextEditingController restController =
+                            restControllerList.removeAt(oldIndex);
+                        restControllerList.insert(newIndex, restController);
+
+                        final TextEditingController setContoller =
+                            setControllerList.removeAt(oldIndex);
+                        setControllerList.insert(newIndex, setContoller);
+
+                        final TextEditingController repTimeController =
+                            repTimeControllerList.removeAt(oldIndex);
+                        repTimeControllerList.insert(
+                            newIndex, repTimeController);
                       });
                     }),
                     children: getRoutineExerciseList(),
@@ -266,8 +291,10 @@ class _ExerciseSearchAutocompleteState
           for (ExerciseSearchResult option in options) {
             // use contains to account for substrings
             if (option.exercise.name
-                .toLowerCase()
-                .contains(textEditingValue.text.toLowerCase())) {
+                    .toLowerCase()
+                    .contains(textEditingValue.text.toLowerCase()) ||
+                option.exercise.name.toLowerCase() ==
+                    textEditingValue.text.toLowerCase()) {
               results.add(option);
               break;
             }
@@ -323,7 +350,10 @@ class ExerciseSearchResult extends ConsumerWidget {
 }
 
 class RoutineExerciseBox extends ConsumerStatefulWidget {
-  final TextEditingController timeController;
+  final TextEditingController restController;
+  final TextEditingController setController;
+  final TextEditingController repTimeController;
+  final TextEditingController weightController;
   final RoutineExercise routineExercise;
   final Exercise exercise;
   final int? weight;
@@ -332,7 +362,10 @@ class RoutineExerciseBox extends ConsumerStatefulWidget {
 
   RoutineExerciseBox({
     Key? key,
-    required this.timeController,
+    required this.restController,
+    required this.setController,
+    required this.repTimeController,
+    required this.weightController,
     required this.routineExercise,
     this.weight,
     this.reps,
@@ -348,31 +381,192 @@ class RoutineExerciseBox extends ConsumerStatefulWidget {
 class _RoutineExerciseBoxState extends ConsumerState<RoutineExerciseBox> {
   @override
   Widget build(BuildContext context) {
+    Widget weightedField() {
+      // todo get the weighted value
+      if (widget.exercise.isWeighted) {
+        return SizedBox(
+          width: 60,
+          child: Focus(
+            onFocusChange: (hasFocus) {
+              if (!hasFocus) {
+                if (widget.weightController.text.isEmpty ||
+                    int.parse(widget.weightController.text) < 1) {
+                  widget.weightController.text = '1';
+                }
+              }
+            },
+            child: Column(
+              children: [
+                Align(
+                  alignment: Alignment.center,
+                  child: TextFormField(
+                    textAlign: TextAlign.center,
+                    maxLength: 7,
+                    controller: widget.weightController,
+                    decoration:
+                        const InputDecoration(hintText: '0', counterText: ''),
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                    ],
+                  ),
+                ),
+                const Text(
+                  'weight (lbs)',
+                  style: TextStyle(fontSize: 10),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        );
+      } else {
+        return const SizedBox(width: 0);
+      }
+    }
+
+    Widget repTimeField() {
+      if (widget.exercise.isTimed) {
+        return SizedBox(
+          width: 50,
+          child: Focus(
+            onFocusChange: (hasFocus) {
+              if (!hasFocus) {
+                TimeValidation.validate(
+                    widget.repTimeController.text, widget.repTimeController);
+              }
+            },
+            child: Column(
+              children: [
+                Align(
+                  alignment: Alignment.center,
+                  child: TextField(
+                    controller: widget.repTimeController,
+                    decoration: const InputDecoration(hintText: '00:00'),
+                    inputFormatters: [
+                      TimeInputFormatter(),
+                    ],
+                  ),
+                ),
+                const Text('time', style: TextStyle(fontSize: 10)),
+              ],
+            ),
+          ),
+        );
+      } else {
+        widget.repTimeController.text = '1';
+
+        return SizedBox(
+          width: 35,
+          child: Focus(
+            onFocusChange: (hasFocus) {
+              if (!hasFocus) {
+                if (widget.repTimeController.text.isEmpty ||
+                    int.parse(widget.repTimeController.text) < 1) {
+                  widget.repTimeController.text = '1';
+                }
+              }
+            },
+            child: Column(
+              children: [
+                Align(
+                  alignment: Alignment.center,
+                  child: TextFormField(
+                    textAlign: TextAlign.center,
+                    maxLength: 2,
+                    controller: widget.repTimeController,
+                    decoration:
+                        const InputDecoration(hintText: '0', counterText: ''),
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                    ],
+                  ),
+                ),
+                const Text(
+                  'reps',
+                  style: TextStyle(fontSize: 10),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+    }
+
     return Row(
       children: [
         SizedBox(width: MediaQuery.of(context).size.width * .05),
         DropShadowContainer(
-          child: Row(
+          child: Column(
             children: [
               Text(widget.exercise.name),
-              const Spacer(),
-              SizedBox(
-                width: 50,
-                child: Focus(
-                  onFocusChange: (hasFocus) {
-                    if (!hasFocus) {
-                      TimeValidation.validate(
-                          widget.timeController.text, widget.timeController);
-                    }
-                  },
-                  child: TextField(
-                    controller: widget.timeController,
-                    decoration: const InputDecoration(hintText: '00:00'),
-                    inputFormatters: [
-                      TimerInputFormatter(),
-                    ],
+              Row(
+                children: [
+                  SizedBox(
+                    width: 50,
+                    child: Focus(
+                      onFocusChange: (hasFocus) {
+                        if (!hasFocus) {
+                          TimeValidation.validate(widget.restController.text,
+                              widget.restController);
+                        }
+                      },
+                      child: Column(
+                        children: [
+                          Align(
+                            alignment: Alignment.center,
+                            child: TextField(
+                              controller: widget.restController,
+                              decoration:
+                                  const InputDecoration(hintText: '00:00'),
+                              inputFormatters: [
+                                TimeInputFormatter(),
+                              ],
+                            ),
+                          ),
+                          const Text('rest', style: TextStyle(fontSize: 10)),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
+                  SizedBox(
+                    width: 35,
+                    child: Focus(
+                      onFocusChange: (hasFocus) {
+                        if (!hasFocus) {
+                          if (widget.setController.text.isEmpty ||
+                              int.parse(widget.setController.text) < 1) {
+                            widget.setController.text = '1';
+                          }
+                        }
+                      },
+                      child: Column(
+                        children: [
+                          Align(
+                            alignment: Alignment.center,
+                            child: TextFormField(
+                              textAlign: TextAlign.center,
+                              maxLength: 2,
+                              controller: widget.setController,
+                              decoration: const InputDecoration(
+                                  hintText: '0', counterText: ''),
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                              ],
+                            ),
+                          ),
+                          const Text(
+                            'sets',
+                            style: TextStyle(fontSize: 10),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  repTimeField(),
+                  weightedField(),
+                ],
               ),
             ],
           ),
