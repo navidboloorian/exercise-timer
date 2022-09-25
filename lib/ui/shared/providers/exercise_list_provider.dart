@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../db/DatabaseHelper.dart';
 import '../../../db/models/exercise.dart';
 
 class ExerciseListNotifier extends StateNotifier<List<Exercise>> {
@@ -13,8 +12,6 @@ class ExerciseListNotifier extends StateNotifier<List<Exercise>> {
 
   void add(Exercise exercise) {
     state = [...state, exercise];
-
-    DatabaseHelper.insertExercise(exercise);
   }
 
   void delete(Exercise exerciseToDelete) {

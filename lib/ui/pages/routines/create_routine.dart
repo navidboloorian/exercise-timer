@@ -8,6 +8,7 @@ import '../../shared/widgets/shared_widgets.dart';
 import '../../shared/classes/shared_classes.dart';
 import '../../shared/providers/shared_providers.dart';
 import '../../../db/models/shared_models.dart';
+import '../../../db/DatabaseHelper.dart';
 import '../../../utils/colors.dart';
 
 final formKey = GlobalKey();
@@ -23,6 +24,9 @@ class _CreateRoutineState extends ConsumerState<CreateRoutine> {
   // used to submit the form/validate
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
+  // used to bring fields into view when they are off screen
+  final _scrollController = ScrollController();
+
   // used to manipulate the text in the corresponding text fields
   final _nameController = TextEditingController();
 
@@ -34,6 +38,10 @@ class _CreateRoutineState extends ConsumerState<CreateRoutine> {
       <TextEditingController>[];
   final List<TextEditingController> weightControllerList =
       <TextEditingController>[];
+
+  void _scrollIntoView() {
+    _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+  }
 
   @override
   void dispose() {
@@ -58,7 +66,6 @@ class _CreateRoutineState extends ConsumerState<CreateRoutine> {
 
       return Dismissible(
         background: Container(
-          height: 10,
           width: MediaQuery.of(context).size.width * 0.9,
           color: CustomColors.removeRed,
           child: const Center(child: Icon(Icons.remove_circle)),
@@ -102,27 +109,32 @@ class _CreateRoutineState extends ConsumerState<CreateRoutine> {
       );
     }
 
-    void submitForm() {
+    void submitForm() async {
       if (_formKey.currentState!.validate()) {
         String name = _nameController.text;
         String description = 'blank';
-        List<RoutineExercise> exerciseList = <RoutineExercise>[];
 
-        for (int i = 0; i < routineExerciseListRead.length; i++) {
-          Exercise exercise = routineExerciseListRead[i].exercise;
+        int routineId = await DatabaseHelper.insertRoutine(
+            Routine(name: name, description: description));
 
-          exerciseList.add(
-            RoutineExercise(
-                exercise, TimeValidation.toSeconds(restControllerList[i].text)),
-          );
+        for (RoutineExercise routineExercise in routineExerciseListRead) {
+          routineExercise.routineId = routineId;
+          routineExercise.exerciseId = routineExercise.exercise.id;
+
+          DatabaseHelper.insertRoutineExercise(routineExercise.toMap());
         }
 
-        Routine(
-            name: name, description: description, exerciseList: exerciseList);
+        routineExerciseList.clear();
+
+        // makes sure the widget is still mounted if we want to pop context
+        if (!mounted) return;
+
+        Navigator.pop(context);
       }
     }
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: const Text('Create Routine'),
         actions: [
@@ -141,6 +153,7 @@ class _CreateRoutineState extends ConsumerState<CreateRoutine> {
       body: Form(
         key: _formKey,
         child: ListView(
+          controller: _scrollController,
           physics: const AlwaysScrollableScrollPhysics(),
           children: [
             Center(
@@ -191,7 +204,8 @@ class _CreateRoutineState extends ConsumerState<CreateRoutine> {
                     }),
                     children: getRoutineExerciseList(),
                   ),
-                  const ExerciseSearchAutocomplete(),
+                  ExerciseSearchAutocomplete(focusBehavior: _scrollIntoView),
+                  const SizedBox(height: 136),
                 ],
               ),
             ),
@@ -203,7 +217,12 @@ class _CreateRoutineState extends ConsumerState<CreateRoutine> {
 }
 
 class ExerciseSearchAutocomplete extends ConsumerStatefulWidget {
-  const ExerciseSearchAutocomplete({Key? key}) : super(key: key);
+  final VoidCallback focusBehavior;
+
+  const ExerciseSearchAutocomplete({
+    Key? key,
+    required this.focusBehavior,
+  }) : super(key: key);
 
   @override
   ConsumerState<ConsumerStatefulWidget> createState() =>
@@ -230,15 +249,21 @@ class _ExerciseSearchAutocompleteState
     return DropShadowContainer(
       child: RawAutocomplete<ExerciseSearchResult>(
         fieldViewBuilder:
-            ((context, textEditingController, focusNode, onFieldSubmitted) =>
-                TextFormField(
-                  controller: textEditingController,
-                  focusNode: focusNode,
-                  decoration: const InputDecoration(hintText: 'Exercises...'),
-                  onFieldSubmitted: (String value) {
-                    onFieldSubmitted();
-                  },
-                )),
+            ((context, textEditingController, focusNode, onFieldSubmitted) {
+          if (focusNode.hasFocus) {
+            print('here');
+            widget.focusBehavior();
+          }
+
+          return TextFormField(
+            controller: textEditingController,
+            focusNode: focusNode,
+            decoration: const InputDecoration(hintText: 'Exercises...'),
+            onFieldSubmitted: (String value) {
+              onFieldSubmitted();
+            },
+          );
+        }),
         optionsViewBuilder: (context, onSelected, options) {
           return Align(
             alignment: Alignment.topLeft,
@@ -259,6 +284,7 @@ class _ExerciseSearchAutocompleteState
                 height: 34.0 * options.length, // 34 = height of container
                 constraints: const BoxConstraints(maxHeight: 126), // 4 * height
                 child: ListView.builder(
+                  padding: EdgeInsets.zero,
                   itemCount: options.length,
                   itemBuilder: (BuildContext context, int index) {
                     {
@@ -269,10 +295,11 @@ class _ExerciseSearchAutocompleteState
                         onTap: () {
                           // add exercise to the list of exercies in current routine
                           routineExerciseList.add(
-                            RoutineExercise(option.exercise, 5),
+                            RoutineExercise(option.exercise, 0),
                           );
                         },
-                        child: option,
+                        child: Container(
+                            color: CustomColors.darkBackground, child: option),
                       );
                     }
                   },
@@ -296,7 +323,7 @@ class _ExerciseSearchAutocompleteState
                 option.exercise.name.toLowerCase() ==
                     textEditingValue.text.toLowerCase()) {
               results.add(option);
-              break;
+              continue;
             }
 
             // search through each exercise's tag as well as its name
@@ -328,7 +355,6 @@ class ExerciseSearchResult extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Container(
-      color: CustomColors.darkBackground,
       padding: const EdgeInsets.all(5),
       child: Row(
         children: [

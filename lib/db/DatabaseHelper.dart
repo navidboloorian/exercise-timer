@@ -6,14 +6,22 @@ import 'package:sqflite/sqflite.dart';
 import 'models/shared_models.dart';
 
 class DatabaseHelper {
-  static const String _dbName = 'local.db';
+  static const String _dbName = 'local2.db';
+  static const String _exerciseTable = 'exercises';
+  static const String _routineTable = 'routines';
+  static const String _routineExerciseTable = 'routine_exercises';
   static const String _idCol = 'id';
   static const String _nameCol = 'name';
   static const String _descriptionCol = 'description';
   static const String _isWeightedCol = 'isWeighted';
   static const String _isTimedCol = 'isTimed';
   static const String _tagsCol = 'tags';
-  static const String _exerciseListCol = 'exerciseList';
+  static const String _routineIdCol = 'routineId';
+  static const String _exerciseIdCol = 'exerciseId';
+  static const String _restCol = 'rest';
+  static const String _timeCol = 'time';
+  static const String _repsCol = 'reps';
+  static const String _weightCol = 'weight';
 
   static Future<Database> initializeDB() async {
     // gets the default database location
@@ -26,7 +34,7 @@ class DatabaseHelper {
       onCreate: (database, version) async {
         await database.execute(
           '''
-            CREATE TABLE exercises 
+            CREATE TABLE IF NOT EXISTS $_exerciseTable 
             (
               $_idCol INTEGER PRIMARY KEY AUTOINCREMENT, 
               $_nameCol TEXT NOT NULL, 
@@ -35,12 +43,33 @@ class DatabaseHelper {
               $_isTimedCol INTEGER NOT NULL,
               $_tagsCol STRING
             );
-            CREATE TABLE routines 
+          ''',
+        );
+
+        await database.execute(
+          '''
+            CREATE TABLE IF NOT EXISTS $_routineTable 
             (
               $_idCol INTEGER PRIMARY KEY AUTOINCREMENT, 
               $_nameCol TEXT NOT NULL, 
-              $_descriptionCol TEXT,
-              $_exerciseListCol TEXT
+              $_descriptionCol TEXT
+            );
+          ''',
+        );
+
+        await database.execute(
+          '''
+            CREATE TABLE IF NOT EXISTS $_routineExerciseTable
+            (
+              $_idCol INTEGER PRIMARY KEY AUTOINCREMENT,
+              $_routineIdCol INTEGER,
+              $_exerciseIdCol INTEGER,
+              $_restCol INTEGER,
+              $_timeCol INTEGER,
+              $_repsCol INTEGER,
+              $_weightCol INTEGER,
+              FOREIGN KEY($_routineIdCol) REFERENCES routines($_idCol),
+              FOREIGN KEY($_exerciseIdCol) REFERENCES routines($_idCol)
             );
           ''',
         );
@@ -52,35 +81,53 @@ class DatabaseHelper {
   static Future<void> insertExercise(Exercise exercise) async {
     final Database db = await initializeDB();
 
-    await db.insert('exercises', exercise.toMap());
+    await db.insert(_exerciseTable, exercise.toMap());
   }
 
   static Future<List<Exercise>> getExercises() async {
     final Database db = await initializeDB();
-    final List<Map<String, Object?>> queryResult = await db.query('exercises');
+    final List<Map<String, Object?>> queryResult =
+        await db.query(_exerciseTable);
 
     return queryResult.map((exercise) => Exercise.fromMap(exercise)).toList();
+  }
+
+  static Future<Exercise> getExercise(int id) async {
+    final Database db = await initializeDB();
+
+    // query always returns a list
+    List<Map<String, Object?>> exerciseObjs = await db.query(
+      _exerciseTable,
+      where: 'id=?',
+      whereArgs: [id],
+    );
+
+    // get first (and only) member of list
+    return Exercise.fromMap(exerciseObjs[0]);
   }
 
   static Future<void> deleteExercise(int id) async {
     final Database db = await initializeDB();
 
     await db.delete(
-      'exercises',
+      _exerciseTable,
       where: 'id=?',
       whereArgs: [id],
     );
   }
 
-  static Future<void> insertRoutine(Routine routine) async {
+  static Future<int> insertRoutine(Routine routine) async {
     final Database db = await initializeDB();
 
-    await db.insert('routines', routine.toMap());
+    int id = await db.insert(_routineTable, routine.toMap());
+
+    return id;
   }
 
   static Future<List<Routine>> getRoutines() async {
     final Database db = await initializeDB();
-    final List<Map<String, Object?>> queryResult = await db.query('exercises');
+    final List<Map<String, Object?>> queryResult =
+        await db.query(_routineTable);
 
     return queryResult.map((routine) => Routine.fromMap(routine)).toList();
   }
@@ -89,7 +136,32 @@ class DatabaseHelper {
     final Database db = await initializeDB();
 
     await db.delete(
-      'routines',
+      _routineTable,
+      where: 'id=?',
+      whereArgs: [id],
+    );
+  }
+
+  static Future<void> insertRoutineExercise(
+      Map<String, Object?> routineExercise) async {
+    final Database db = await initializeDB();
+
+    await db.insert(_routineExerciseTable, routineExercise);
+  }
+
+  static Future<List<Routine>> getRoutineExercises() async {
+    final Database db = await initializeDB();
+    final List<Map<String, Object?>> queryResult =
+        await db.query(_routineExerciseTable);
+
+    return queryResult.map((routine) => Routine.fromMap(routine)).toList();
+  }
+
+  static Future<void> deleteRoutineExercise(int id) async {
+    final Database db = await initializeDB();
+
+    await db.delete(
+      _routineExerciseTable,
       where: 'id=?',
       whereArgs: [id],
     );

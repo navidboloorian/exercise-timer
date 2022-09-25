@@ -25,23 +25,9 @@ class Exercises extends ConsumerWidget {
               child: Row(
                 children: [
                   Text(exercise.name),
-                  const Spacer(),
-                  const IconButton(
-                    onPressed: null,
-                    icon: Icon(
-                      Icons.delete,
-                      color: Colors.white,
-                    ),
-                  ),
                 ],
               ),
             ),
-          ),
-        );
-
-        widgetList.add(
-          const SizedBox(
-            height: 10,
           ),
         );
       }
@@ -62,7 +48,14 @@ class Exercises extends ConsumerWidget {
         ],
       ),
       body: Center(
-        child: Column(children: exerciseListRenderer()),
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            Column(
+              children: exerciseListRenderer(),
+            )
+          ],
+        ),
       ),
       bottomNavigationBar: BottomBar(pages: pages),
     );
