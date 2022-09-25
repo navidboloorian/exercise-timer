@@ -29,6 +29,7 @@ class _CreateRoutineState extends ConsumerState<CreateRoutine> {
 
   // used to manipulate the text in the corresponding text fields
   final _nameController = TextEditingController();
+  final _tagsController = TextEditingController();
 
   final List<TextEditingController> restControllerList =
       <TextEditingController>[];
@@ -54,6 +55,9 @@ class _CreateRoutineState extends ConsumerState<CreateRoutine> {
 
   @override
   Widget build(BuildContext context) {
+    // list of all routines
+    final routineList = ref.watch(routineListProvider.notifier);
+
     // list of the current exercises in the current routine
     final routineExerciseListRead = ref.watch(routineExerciseListProvider);
     final routineExerciseList = ref.watch(routineExerciseListProvider.notifier);
@@ -113,9 +117,17 @@ class _CreateRoutineState extends ConsumerState<CreateRoutine> {
       if (_formKey.currentState!.validate()) {
         String name = _nameController.text;
         String description = 'blank';
+        List<String> tagsList = [];
 
-        int routineId = await DatabaseHelper.insertRoutine(
-            Routine(name: name, description: description));
+        if (_tagsController.text.isNotEmpty) {
+          tagsList = _tagsController.text.split(',');
+        }
+
+        Routine routine =
+            Routine(name: name, description: description, tags: tagsList);
+
+        int routineId = await DatabaseHelper.insertRoutine(routine);
+        routineList.add(routine);
 
         for (RoutineExercise routineExercise in routineExerciseListRead) {
           routineExercise.routineId = routineId;
@@ -174,6 +186,16 @@ class _CreateRoutineState extends ConsumerState<CreateRoutine> {
                         }
                         return null;
                       },
+                    ),
+                  ),
+                  DropShadowContainer(
+                    child: TextFormField(
+                      maxLines: null,
+                      decoration: const InputDecoration(
+                        hintText: 'Tags (separate with commas)',
+                        counterText: '',
+                      ),
+                      controller: _tagsController,
                     ),
                   ),
                   ReorderableListView(

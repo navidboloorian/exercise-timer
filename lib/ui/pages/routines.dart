@@ -2,13 +2,56 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../shared/widgets/shared_widgets.dart';
+import '../../utils/colors.dart';
+import '../shared/providers/shared_providers.dart';
+import '../../../db/models/routine.dart';
 
-class Routines extends StatelessWidget {
+class Routines extends ConsumerWidget {
   final List<String> pages;
-  const Routines({super.key, required this.pages});
+
+  const Routines({Key? key, required this.pages}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final routineListRead = ref.watch(routineListProvider);
+    final routineList = ref.watch(routineListProvider.notifier);
+
+    List<Widget> routineListRenderer() {
+      List<Widget> widgetList = <Widget>[];
+
+      for (Routine routine in routineListRead) {
+        widgetList.add(
+          Dismissible(
+            key: UniqueKey(),
+            background: Container(
+              width: MediaQuery.of(context).size.width * 0.9,
+              color: CustomColors.removeRed,
+              child: const Center(child: Icon(Icons.delete)),
+            ),
+            onDismissed: (direction) {
+              routineList.delete(routine);
+            },
+            child: Row(
+              children: [
+                SizedBox(width: MediaQuery.of(context).size.width * 0.05),
+                DropShadowContainer(
+                  tags: routine.tags,
+                  child: Row(
+                    children: [
+                      Text(routine.name),
+                    ],
+                  ),
+                ),
+                SizedBox(width: MediaQuery.of(context).size.width * 0.05),
+              ],
+            ),
+          ),
+        );
+      }
+
+      return widgetList;
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Routines'),
@@ -21,19 +64,18 @@ class Routines extends StatelessWidget {
           )
         ],
       ),
-      body: Center(
-        child: Column(
-          children: const [
-            DropShadowContainer(
-              tags: ['hello', 'goodbye'],
-              child: Text("HELLO"),
+      body: routineListRead.isEmpty
+          ? const Center(child: Text('No routines'))
+          : ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: [
+                Center(
+                  child: Column(
+                    children: routineListRenderer(),
+                  ),
+                ),
+              ],
             ),
-            DropShadowContainer(
-              child: Text("HELLO"),
-            ),
-          ],
-        ),
-      ),
       bottomNavigationBar: BottomBar(pages: pages),
     );
   }

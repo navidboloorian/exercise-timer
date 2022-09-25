@@ -6,7 +6,7 @@ import 'package:sqflite/sqflite.dart';
 import 'models/shared_models.dart';
 
 class DatabaseHelper {
-  static const String _dbName = 'local2.db';
+  static const String _dbName = 'local3.db';
   static const String _exerciseTable = 'exercises';
   static const String _routineTable = 'routines';
   static const String _routineExerciseTable = 'routine_exercises';
@@ -41,7 +41,7 @@ class DatabaseHelper {
               $_descriptionCol TEXT,
               $_isWeightedCol INTEGER NOT NULL, 
               $_isTimedCol INTEGER NOT NULL,
-              $_tagsCol STRING
+              $_tagsCol TEXT
             );
           ''',
         );
@@ -52,6 +52,7 @@ class DatabaseHelper {
             (
               $_idCol INTEGER PRIMARY KEY AUTOINCREMENT, 
               $_nameCol TEXT NOT NULL, 
+              $_tagsCol TEXT,
               $_descriptionCol TEXT
             );
           ''',

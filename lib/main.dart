@@ -1,3 +1,4 @@
+import 'package:exercise_timer/ui/shared/providers/routine_list_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -22,8 +23,11 @@ class App extends ConsumerStatefulWidget {
 class _AppState extends ConsumerState<App> {
   void getExercises() async {
     List<Exercise> dbExerciseList = await DatabaseHelper.getExercises();
+    List<Routine> dbRoutineList = await DatabaseHelper.getRoutines();
 
+    // set the routine and exercise list with information from database
     ref.watch(exerciseListProvider.notifier).set(dbExerciseList);
+    ref.watch(routineListProvider.notifier).set(dbRoutineList);
   }
 
   @override

@@ -11,15 +11,16 @@ class RoutineListNotifier extends StateNotifier<List<Routine>> {
     state = routines;
   }
 
-  void add(Routine routine) {
-    state = [...state, routine];
-
-    DatabaseHelper.insertRoutine(routine);
+  void add(Routine routine) async {
+    print(routine.name);
+    state = await DatabaseHelper.getRoutines();
   }
 
   void delete(Routine routineToDelete) {
-    state =
-        state.where((Routine routine) => routine != routineToDelete).toList();
+    DatabaseHelper.deleteRoutine(routineToDelete.id!);
+    state.removeWhere((routine) => routine.id == routineToDelete.id);
+
+    state = state;
   }
 
   void clearExercises() {
