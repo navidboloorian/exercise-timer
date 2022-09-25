@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../shared/widgets/shared_widgets.dart';
+import '../../utils/colors.dart';
 import '../shared/providers/shared_providers.dart';
 import '../../../db/models/exercise.dart';
 
@@ -12,21 +13,37 @@ class Exercises extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final exerciseList = ref.watch(exerciseListProvider);
+    final exerciseListRead = ref.watch(exerciseListProvider);
+    final exerciseList = ref.watch(exerciseListProvider.notifier);
 
     List<Widget> exerciseListRenderer() {
       List<Widget> widgetList = <Widget>[];
 
-      for (Exercise exercise in exerciseList) {
+      for (Exercise exercise in exerciseListRead) {
         widgetList.add(
-          GestureDetector(
-            child: DropShadowContainer(
-              tags: exercise.tags,
-              child: Row(
-                children: [
-                  Text(exercise.name),
-                ],
-              ),
+          Dismissible(
+            key: UniqueKey(),
+            background: Container(
+              width: MediaQuery.of(context).size.width * 0.9,
+              color: CustomColors.removeRed,
+              child: const Center(child: Icon(Icons.delete)),
+            ),
+            onDismissed: (direction) {
+              exerciseList.delete(exercise);
+            },
+            child: Row(
+              children: [
+                SizedBox(width: MediaQuery.of(context).size.width * 0.05),
+                DropShadowContainer(
+                  tags: exercise.tags,
+                  child: Row(
+                    children: [
+                      Text(exercise.name),
+                    ],
+                  ),
+                ),
+                SizedBox(width: MediaQuery.of(context).size.width * 0.05),
+              ],
             ),
           ),
         );
@@ -47,16 +64,18 @@ class Exercises extends ConsumerWidget {
           )
         ],
       ),
-      body: Center(
-        child: ListView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          children: [
-            Column(
-              children: exerciseListRenderer(),
-            )
-          ],
-        ),
-      ),
+      body: exerciseListRead.isEmpty
+          ? const Center(child: Text('No exercises'))
+          : ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: [
+                Center(
+                  child: Column(
+                    children: exerciseListRenderer(),
+                  ),
+                ),
+              ],
+            ),
       bottomNavigationBar: BottomBar(pages: pages),
     );
   }

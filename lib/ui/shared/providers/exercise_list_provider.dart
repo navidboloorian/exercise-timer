@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../db/models/exercise.dart';
+import '../../../db/database_helper.dart';
 
 class ExerciseListNotifier extends StateNotifier<List<Exercise>> {
   // set default state to 0
@@ -10,14 +11,15 @@ class ExerciseListNotifier extends StateNotifier<List<Exercise>> {
     state = exercises;
   }
 
-  void add(Exercise exercise) {
-    state = [...state, exercise];
+  void add(Exercise exercise) async {
+    state = await DatabaseHelper.getExercises();
   }
 
-  void delete(Exercise exerciseToDelete) {
-    state = state
-        .where((Exercise exercise) => exercise != exerciseToDelete)
-        .toList();
+  void delete(Exercise exerciseToDelete) async {
+    DatabaseHelper.deleteExercise(exerciseToDelete.id!);
+    state.removeWhere((exercise) => exercise.id == exerciseToDelete.id);
+
+    state = state;
   }
 
   void clearExercises() {

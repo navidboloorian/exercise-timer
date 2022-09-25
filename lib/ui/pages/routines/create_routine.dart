@@ -8,7 +8,7 @@ import '../../shared/widgets/shared_widgets.dart';
 import '../../shared/classes/shared_classes.dart';
 import '../../shared/providers/shared_providers.dart';
 import '../../../db/models/shared_models.dart';
-import '../../../db/DatabaseHelper.dart';
+import '../../../db/database_helper.dart';
 import '../../../utils/colors.dart';
 
 final formKey = GlobalKey();
@@ -66,7 +66,7 @@ class _CreateRoutineState extends ConsumerState<CreateRoutine> {
 
       return Dismissible(
         background: Container(
-          width: MediaQuery.of(context).size.width * 0.9,
+          width: MediaQuery.of(context).size.width,
           color: CustomColors.removeRed,
           child: const Center(child: Icon(Icons.remove_circle)),
         ),

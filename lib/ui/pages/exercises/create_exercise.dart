@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../shared/widgets/shared_widgets.dart';
 import '../../shared/providers/shared_providers.dart';
 import '../../../db/models/shared_models.dart';
-import '../../../db/DatabaseHelper.dart';
+import '../../../db/database_helper.dart';
 
 class CreateExercise extends ConsumerStatefulWidget {
   const CreateExercise({Key? key}) : super(key: key);
@@ -49,7 +49,7 @@ class _CreateExerciseState extends ConsumerState<CreateExercise> {
         ref.watch(_timedSwitchButton); // 0 = for reps, 1 = for time
 
     // create exercise and add to exercise list
-    void submitForm() {
+    void submitForm() async {
       if (_formKey.currentState!.validate()) {
         List<String> tagsList = [];
 
@@ -65,11 +65,14 @@ class _CreateExerciseState extends ConsumerState<CreateExercise> {
           tags: tagsList,
         );
 
+        await DatabaseHelper.insertExercise(exercise);
         exerciseListNotifier.add(exercise);
-        DatabaseHelper.insertExercise(exercise);
 
         weightedButtonNotifier.reset();
         timedButtonNotifier.reset();
+
+        if (!mounted) return;
+
         Navigator.pop(context);
       }
     }

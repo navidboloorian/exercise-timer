@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'utils/themes.dart';
 import 'ui/pages/pages.dart';
-import 'db/DatabaseHelper.dart';
+import 'db/database_helper.dart';
 import 'db/models/shared_models.dart';
 import 'ui/shared/providers/exercise_list_provider.dart';
 
