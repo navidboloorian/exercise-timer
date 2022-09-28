@@ -13,14 +13,18 @@ import '../../../utils/colors.dart';
 
 final formKey = GlobalKey();
 
-class CreateRoutine extends ConsumerStatefulWidget {
-  const CreateRoutine({Key? key}) : super(key: key);
+class ViewRoutine extends ConsumerStatefulWidget {
+  final bool isNew;
+  final int? routineId;
+
+  const ViewRoutine({Key? key, required this.isNew, this.routineId})
+      : super(key: key);
 
   @override
-  ConsumerState<ConsumerStatefulWidget> createState() => _CreateRoutineState();
+  ConsumerState<ConsumerStatefulWidget> createState() => _ViewRoutineState();
 }
 
-class _CreateRoutineState extends ConsumerState<CreateRoutine> {
+class _ViewRoutineState extends ConsumerState<ViewRoutine> {
   // used to submit the form/validate
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 

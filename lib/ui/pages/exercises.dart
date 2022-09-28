@@ -1,3 +1,4 @@
+import 'package:exercise_timer/ui/shared/classes/shared_classes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -54,10 +55,13 @@ class Exercises extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Exercise Library'),
+        title: const Text('Exercises'),
         actions: <Widget>[
           PlusButton(
-            onPressed: () => Navigator.pushNamed(context, 'create_exercise'),
+            onPressed: () => Navigator.pushNamed(
+                context,
+                arguments: const PageArguments(isNew: true, exerciseId: null),
+                'view_exercise'),
           ),
           const SizedBox(
             width: 10,

@@ -3,10 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../shared/widgets/shared_widgets.dart';
 import '../../shared/providers/shared_providers.dart';
-import '../../../db/models/exercise.dart';
+import '../../../db/models/shared_models.dart';
+import '../../../db/database_helper.dart';
 
 class ViewExercise extends ConsumerStatefulWidget {
-  const ViewExercise({Key? key}) : super(key: key);
+  final bool isNew;
+  final int? exerciseId;
+
+  const ViewExercise({Key? key, required this.isNew, this.exerciseId})
+      : super(key: key);
 
   @override
   ConsumerState<ConsumerStatefulWidget> createState() => _ViewExerciseState();
@@ -17,8 +22,6 @@ class _ViewExerciseState extends ConsumerState<ViewExercise> {
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _tagsController = TextEditingController();
-
-  //
   final _exerciseList = exerciseListProvider;
 
   // create two separate state-tracking notifiers; one for each button
@@ -50,7 +53,7 @@ class _ViewExerciseState extends ConsumerState<ViewExercise> {
         ref.watch(_timedSwitchButton); // 0 = for reps, 1 = for time
 
     // create exercise and add to exercise list
-    void submitForm() {
+    void submitForm() async {
       if (_formKey.currentState!.validate()) {
         List<String> tagsList = [];
 
@@ -58,25 +61,29 @@ class _ViewExerciseState extends ConsumerState<ViewExercise> {
           tagsList = _tagsController.text.split(',');
         }
 
-        exerciseListNotifier.add(
-          Exercise(
-            name: _nameController.text,
-            isTimed: isTimed,
-            isWeighted: isWeighted,
-            description: _descriptionController.text,
-            tags: tagsList,
-          ),
+        Exercise exercise = Exercise(
+          name: _nameController.text,
+          isTimed: isTimed,
+          isWeighted: isWeighted,
+          description: _descriptionController.text,
+          tags: tagsList,
         );
+
+        await DatabaseHelper.insertExercise(exercise);
+        exerciseListNotifier.add(exercise);
 
         weightedButtonNotifier.reset();
         timedButtonNotifier.reset();
+
+        if (!mounted) return;
+
         Navigator.pop(context);
       }
     }
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Exercise'),
+        title: const Text('Create Exercise'),
         actions: [
           IconButton(
             onPressed: submitForm,
@@ -131,16 +138,6 @@ class _ViewExerciseState extends ConsumerState<ViewExercise> {
                     counterText: '',
                   ),
                   controller: _descriptionController,
-                ),
-              ),
-              DropShadowContainer(
-                child: TextFormField(
-                  maxLines: null,
-                  decoration: const InputDecoration(
-                    hintText: 'Tags (separate with commas)',
-                    counterText: '',
-                  ),
-                  controller: _tagsController,
                 ),
               ),
               DropShadowContainer(

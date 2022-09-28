@@ -1,3 +1,4 @@
+import 'package:exercise_timer/ui/shared/classes/shared_classes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -57,7 +58,10 @@ class Routines extends ConsumerWidget {
         title: const Text('Routines'),
         actions: <Widget>[
           PlusButton(
-            onPressed: () => Navigator.pushNamed(context, 'create_routine'),
+            onPressed: () => Navigator.pushNamed(
+                context,
+                arguments: const PageArguments(isNew: true, routineId: null),
+                'view_routine'),
           ),
           const SizedBox(
             width: 10,
