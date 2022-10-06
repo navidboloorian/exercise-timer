@@ -6,7 +6,7 @@ import 'package:sqflite/sqflite.dart';
 import 'models/shared_models.dart';
 
 class DatabaseHelper {
-  static const String _dbName = 'local3.db';
+  static const String _dbName = 'local4.db';
   static const String _exerciseTable = 'exercises';
   static const String _routineTable = 'routines';
   static const String _routineExerciseTable = 'routine_exercises';
@@ -20,6 +20,7 @@ class DatabaseHelper {
   static const String _exerciseIdCol = 'exerciseId';
   static const String _restCol = 'rest';
   static const String _timeCol = 'time';
+  static const String _setsCol = 'sets';
   static const String _repsCol = 'reps';
   static const String _weightCol = 'weight';
 
@@ -67,6 +68,7 @@ class DatabaseHelper {
               $_exerciseIdCol INTEGER,
               $_restCol INTEGER,
               $_timeCol INTEGER,
+              $_setsCol INTEGER,
               $_repsCol INTEGER,
               $_weightCol INTEGER,
               FOREIGN KEY($_routineIdCol) REFERENCES routines($_idCol),
@@ -96,7 +98,7 @@ class DatabaseHelper {
     await db.update(
       _exerciseTable,
       exerciseMap,
-      where: 'id=?',
+      where: '$_idCol=?',
       whereArgs: [id],
     );
   }
@@ -115,7 +117,7 @@ class DatabaseHelper {
     // query always returns a list
     List<Map<String, Object?>> exerciseObjs = await db.query(
       _exerciseTable,
-      where: 'id=?',
+      where: '$_idCol=?',
       whereArgs: [id],
     );
 
@@ -128,7 +130,7 @@ class DatabaseHelper {
 
     await db.delete(
       _exerciseTable,
-      where: 'id=?',
+      where: '$_idCol=?',
       whereArgs: [id],
     );
   }
@@ -141,6 +143,17 @@ class DatabaseHelper {
     return id;
   }
 
+  static Future<void> updateRoutine(int id, Routine routine) async {
+    final Database db = await initializeDB();
+
+    Map<String, Object?> routineMap = routine.toMap();
+
+    routineMap.remove('id');
+
+    await db
+        .update(_routineTable, routineMap, where: '$_idCol=?', whereArgs: [id]);
+  }
+
   static Future<List<Routine>> getRoutines() async {
     final Database db = await initializeDB();
     final List<Map<String, Object?>> queryResult =
@@ -149,12 +162,26 @@ class DatabaseHelper {
     return queryResult.map((routine) => Routine.fromMap(routine)).toList();
   }
 
+  static Future<Routine> getRoutine(int id) async {
+    final Database db = await initializeDB();
+
+    // query always returns a list
+    List<Map<String, Object?>> routineObjs = await db.query(
+      _routineTable,
+      where: '$_idCol=?',
+      whereArgs: [id],
+    );
+
+    // get first (and only) member of list
+    return Routine.fromMap(routineObjs[0]);
+  }
+
   static Future<void> deleteRoutine(int id) async {
     final Database db = await initializeDB();
 
     await db.delete(
       _routineTable,
-      where: 'id=?',
+      where: '$_idCol=?',
       whereArgs: [id],
     );
   }
@@ -166,12 +193,31 @@ class DatabaseHelper {
     await db.insert(_routineExerciseTable, routineExercise);
   }
 
-  static Future<List<Routine>> getRoutineExercises() async {
+  static Future<void> deleteRoutineExercises(int routineId) async {
     final Database db = await initializeDB();
-    final List<Map<String, Object?>> queryResult =
-        await db.query(_routineExerciseTable);
 
-    return queryResult.map((routine) => Routine.fromMap(routine)).toList();
+    await db.delete(_routineExerciseTable,
+        where: '$_routineIdCol=?', whereArgs: [routineId]);
+  }
+
+  static Future<List<RoutineExercise>> getRoutineExercises(
+      int routineId) async {
+    final Database db = await initializeDB();
+    final List<Map<String, Object?>> queryResult = await db.query(
+        _routineExerciseTable,
+        where: '$_routineIdCol=?',
+        whereArgs: [routineId]);
+
+    List<RoutineExercise> routineExercises = <RoutineExercise>[];
+
+    for (Map<String, dynamic> routineExerciseObj in queryResult) {
+      RoutineExercise routineExercise =
+          await RoutineExercise.fromMap(routineExerciseObj);
+
+      routineExercises.add(routineExercise);
+    }
+
+    return routineExercises;
   }
 
   static Future<void> deleteRoutineExercise(int id) async {
@@ -179,7 +225,7 @@ class DatabaseHelper {
 
     await db.delete(
       _routineExerciseTable,
-      where: 'id=?',
+      where: '$_idCol=?',
       whereArgs: [id],
     );
   }

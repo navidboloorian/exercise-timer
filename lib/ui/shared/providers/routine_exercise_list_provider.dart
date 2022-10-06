@@ -26,7 +26,12 @@ class RoutineExerciseListNotifier extends StateNotifier<List<RoutineExercise>> {
   }
 
   void clear() {
-    state = [];
+    state.clear();
+    state = state;
+  }
+
+  void set(List<RoutineExercise> routineExerciseList) {
+    state = routineExerciseList;
   }
 }
 

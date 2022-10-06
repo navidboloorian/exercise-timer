@@ -32,19 +32,26 @@ class Routines extends ConsumerWidget {
             onDismissed: (direction) {
               routineList.delete(routine);
             },
-            child: Row(
-              children: [
-                SizedBox(width: MediaQuery.of(context).size.width * 0.05),
-                DropShadowContainer(
-                  tags: routine.tags,
-                  child: Row(
-                    children: [
-                      Text(routine.name),
-                    ],
+            child: GestureDetector(
+              onTap: () => Navigator.pushNamed(
+                context,
+                arguments: PageArguments(isNew: false, routineId: routine.id),
+                'view_routine',
+              ),
+              child: Row(
+                children: [
+                  SizedBox(width: MediaQuery.of(context).size.width * 0.05),
+                  DropShadowContainer(
+                    tags: routine.tags,
+                    child: Row(
+                      children: [
+                        Text(routine.name),
+                      ],
+                    ),
                   ),
-                ),
-                SizedBox(width: MediaQuery.of(context).size.width * 0.05),
-              ],
+                  SizedBox(width: MediaQuery.of(context).size.width * 0.05),
+                ],
+              ),
             ),
           ),
         );

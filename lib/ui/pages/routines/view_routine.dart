@@ -49,12 +49,68 @@ class _ViewRoutineState extends ConsumerState<ViewRoutine> {
   }
 
   @override
+  void initState() {
+    super.initState();
+
+    void setEditableRoutine() async {
+      // call .read because the value only needs to be accessed once
+      final routineExerciseList =
+          ref.read(routineExerciseListProvider.notifier);
+
+      Routine editableRoutine =
+          await DatabaseHelper.getRoutine(widget.routineId!);
+
+      _nameController.text = editableRoutine.name;
+      _tagsController.text = editableRoutine.tags.join(',');
+
+      List<RoutineExercise> routineExercises =
+          await DatabaseHelper.getRoutineExercises(widget.routineId!);
+
+      routineExerciseList.set(routineExercises);
+
+      for (RoutineExercise routineExercise in routineExercises) {
+        if (routineExercise.exercise.isTimed) {
+          repTimeControllerList.add(TextEditingController(
+              text: TimeValidation.toTime(routineExercise.time!)));
+        } else {
+          repTimeControllerList.add(
+              TextEditingController(text: routineExercise.reps.toString()));
+        }
+
+        if (routineExercise.exercise.isWeighted) {
+          weightControllerList.add(
+              TextEditingController(text: routineExercise.weight.toString()));
+        } else {
+          weightControllerList.add(TextEditingController());
+        }
+
+        restControllerList.add(TextEditingController(
+            text: TimeValidation.toTime(routineExercise.rest)));
+        setControllerList
+            .add(TextEditingController(text: routineExercise.sets.toString()));
+      }
+    }
+
+    if (!widget.isNew) {
+      setEditableRoutine();
+    }
+  }
+
+  @override
   void dispose() {
+    super.dispose();
+
     _nameController.dispose();
+    _tagsController.dispose();
+
+    for (int i = 0; i < restControllerList.length; i++) {
+      restControllerList[i].dispose();
+      setControllerList[i].dispose();
+      repTimeControllerList[i].dispose();
+      weightControllerList[i].dispose();
+    }
 
     // TODO: dispose of all controllers
-
-    super.dispose();
   }
 
   @override
@@ -127,15 +183,42 @@ class _ViewRoutineState extends ConsumerState<ViewRoutine> {
           tagsList = _tagsController.text.split(',');
         }
 
-        Routine routine =
-            Routine(name: name, description: description, tags: tagsList);
+        Routine routine;
 
-        int routineId = await DatabaseHelper.insertRoutine(routine);
-        routineList.add(routine);
+        int routineId;
 
-        for (RoutineExercise routineExercise in routineExerciseListRead) {
+        if (widget.isNew) {
+          routine =
+              Routine(name: name, description: description, tags: tagsList);
+          routineId = await routineList.add(routine);
+        } else {
+          routine = await DatabaseHelper.getRoutine(widget.routineId!);
+          routineId = widget.routineId!;
+          await DatabaseHelper.deleteRoutineExercises(routineId);
+          await DatabaseHelper.updateRoutine(routineId, routine);
+
+          routineList.update();
+        }
+
+        for (int i = 0; i < routineExerciseListRead.length; i++) {
+          RoutineExercise routineExercise = routineExerciseListRead[i];
+
+          if (routineExercise.exercise.isTimed) {
+            routineExercise.reps =
+                TimeValidation.toSeconds(repTimeControllerList[i].text);
+          } else {
+            routineExercise.reps = int.parse(repTimeControllerList[i].text);
+          }
+
+          if (routineExercise.exercise.isWeighted) {
+            routineExercise.weight = int.parse(weightControllerList[i].text);
+          }
+
           routineExercise.routineId = routineId;
           routineExercise.exerciseId = routineExercise.exercise.id;
+          routineExercise.sets = int.parse(setControllerList[i].text);
+          routineExercise.rest =
+              TimeValidation.toSeconds(restControllerList[i].text);
 
           DatabaseHelper.insertRoutineExercise(routineExercise.toMap());
         }
@@ -152,7 +235,9 @@ class _ViewRoutineState extends ConsumerState<ViewRoutine> {
     return Scaffold(
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
-        title: const Text('Create Routine'),
+        title: widget.isNew
+            ? const Text('Create Routine')
+            : const Text('View Routine'),
         actions: [
           IconButton(
             onPressed: submitForm,
@@ -277,7 +362,6 @@ class _ExerciseSearchAutocompleteState
         fieldViewBuilder:
             ((context, textEditingController, focusNode, onFieldSubmitted) {
           if (focusNode.hasFocus) {
-            print('here');
             widget.focusBehavior();
           }
 
@@ -410,6 +494,7 @@ class RoutineExerciseBox extends ConsumerStatefulWidget {
   final Exercise exercise;
   final int? weight;
   final int? reps;
+  final int? sets;
   final int? time;
 
   RoutineExerciseBox({
@@ -420,6 +505,7 @@ class RoutineExerciseBox extends ConsumerStatefulWidget {
     required this.weightController,
     required this.routineExercise,
     this.weight,
+    this.sets,
     this.reps,
     this.time,
   })  : exercise = routineExercise.exercise,

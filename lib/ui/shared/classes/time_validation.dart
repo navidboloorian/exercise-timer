@@ -15,6 +15,33 @@ class TimeValidation {
     return seconds;
   }
 
+  static String toTime(int seconds) {
+    int minutes = seconds ~/ 60;
+
+    seconds -= 60 * minutes;
+
+    String minutesString = minutes.toString();
+    String secondsString = seconds.toString();
+
+    if (minutesString.length < 2) {
+      if (minutesString.isEmpty) {
+        minutesString = '00';
+      } else {
+        minutesString = '0$minutes';
+      }
+    }
+
+    if (secondsString.length < 2) {
+      if (minutesString.isEmpty) {
+        secondsString = '00';
+      } else {
+        secondsString = '0$seconds';
+      }
+    }
+
+    return '$minutesString:$secondsString';
+  }
+
   // converts overflowing minutes/seconds (> 60 in either field) to a valid time
   static void validate(String time, TextEditingController controller) {
     if (time.isNotEmpty) {

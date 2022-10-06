@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../db/models/exercise.dart';
@@ -6,6 +8,8 @@ import '../../../db/database_helper.dart';
 class ExerciseListNotifier extends StateNotifier<List<Exercise>> {
   // set default state to 0
   ExerciseListNotifier() : super(<Exercise>[]);
+
+  // consider implementing single exercise getter based on id
 
   void set(List<Exercise> exercises) {
     state = exercises;
@@ -36,7 +40,7 @@ class ExerciseListNotifier extends StateNotifier<List<Exercise>> {
   }
 
   void clearExercises() {
-    state = [];
+    state.clear();
   }
 }
 

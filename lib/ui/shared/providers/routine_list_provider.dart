@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sqflite/sqflite.dart';
 
 import '../../../db/database_helper.dart';
 import '../../../db/models/routine.dart';
@@ -11,9 +12,15 @@ class RoutineListNotifier extends StateNotifier<List<Routine>> {
     state = routines;
   }
 
-  void add(Routine routine) async {
-    print(routine.name);
+  void update() async {
     state = await DatabaseHelper.getRoutines();
+  }
+
+  Future<int> add(Routine routine) async {
+    int routineId = await DatabaseHelper.insertRoutine(routine);
+    update();
+
+    return routineId;
   }
 
   void delete(Routine routineToDelete) {
@@ -24,7 +31,7 @@ class RoutineListNotifier extends StateNotifier<List<Routine>> {
   }
 
   void clearExercises() {
-    state = [];
+    state.clear();
   }
 }
 

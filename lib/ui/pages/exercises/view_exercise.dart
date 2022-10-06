@@ -113,7 +113,9 @@ class _ViewExerciseState extends ConsumerState<ViewExercise> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Create Exercise'),
+        title: widget.isNew
+            ? const Text('Create Exercise')
+            : const Text('View Exercise'),
         actions: [
           IconButton(
             onPressed: submitForm,
