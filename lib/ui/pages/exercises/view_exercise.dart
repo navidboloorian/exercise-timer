@@ -25,14 +25,41 @@ class _ViewExerciseState extends ConsumerState<ViewExercise> {
   final _exerciseList = exerciseListProvider;
 
   // create two separate state-tracking notifiers; one for each button
-  final _weightedSwitchButton = switchButtonFamily('isWeighted');
-  final _timedSwitchButton = switchButtonFamily('isTimed');
+  late final _weightedSwitchButton = switchButtonFamily('isWeighted');
+  late final _timedSwitchButton = switchButtonFamily('isTimed');
+
+  @override
+  void initState() {
+    super.initState();
+
+    void setEditableExercise() async {
+      // call .read because the value only needs to be accessed once
+      SwitchButtonNotifier weightedButtonValue =
+          ref.read(_weightedSwitchButton.notifier);
+      SwitchButtonNotifier timedButtonValue =
+          ref.read(_timedSwitchButton.notifier);
+
+      Exercise editableExercise =
+          await DatabaseHelper.getExercise(widget.exerciseId!);
+
+      _nameController.text = editableExercise.name;
+      _descriptionController.text = editableExercise.description;
+      _tagsController.text = editableExercise.tags.join(',');
+
+      weightedButtonValue.set(editableExercise.isTimed);
+      timedButtonValue.set(editableExercise.isWeighted);
+    }
+
+    if (!widget.isNew) {
+      setEditableExercise();
+    }
+  }
 
   @override
   void dispose() {
+    super.dispose();
     _nameController.dispose();
     _descriptionController.dispose();
-    super.dispose();
   }
 
   @override

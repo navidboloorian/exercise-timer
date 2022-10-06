@@ -32,19 +32,26 @@ class Exercises extends ConsumerWidget {
             onDismissed: (direction) {
               exerciseList.delete(exercise);
             },
-            child: Row(
-              children: [
-                SizedBox(width: MediaQuery.of(context).size.width * 0.05),
-                DropShadowContainer(
-                  tags: exercise.tags,
-                  child: Row(
-                    children: [
-                      Text(exercise.name),
-                    ],
+            child: GestureDetector(
+              onTap: () => Navigator.pushNamed(
+                  context,
+                  arguments:
+                      PageArguments(isNew: false, exerciseId: exercise.id),
+                  'view_exercise'),
+              child: Row(
+                children: [
+                  SizedBox(width: MediaQuery.of(context).size.width * 0.05),
+                  DropShadowContainer(
+                    tags: exercise.tags,
+                    child: Row(
+                      children: [
+                        Text(exercise.name),
+                      ],
+                    ),
                   ),
-                ),
-                SizedBox(width: MediaQuery.of(context).size.width * 0.05),
-              ],
+                  SizedBox(width: MediaQuery.of(context).size.width * 0.05),
+                ],
+              ),
             ),
           ),
         );

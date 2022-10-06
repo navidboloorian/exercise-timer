@@ -35,15 +35,19 @@ class TimeInputFormatter extends TextInputFormatter {
         }
       } else if (value.length == 4) {
         if (value.substring(0, 4) == '00:0') {
+          print('1');
           leftSubstring = '';
           rightSubstring = '';
         } else if (value.substring(0, 3) == '00:') {
+          print('2');
           leftSubstring = '00:0';
           rightSubstring = value.substring(3, 4);
         } else {
           leftSubstring = '00';
           rightSubstring =
-              ':${value.substring(1, 2)}${value.substring(3, 4)}${value.substring(4)}';
+              '${value.substring(1, 2)}${value.substring(3, 4)}${value.substring(4)}';
+
+          print(rightSubstring);
         }
       } else {
         leftSubstring = '00:0';
