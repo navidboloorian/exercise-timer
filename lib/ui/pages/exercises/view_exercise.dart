@@ -96,8 +96,11 @@ class _ViewExerciseState extends ConsumerState<ViewExercise> {
           tags: tagsList,
         );
 
-        await DatabaseHelper.insertExercise(exercise);
-        exerciseListNotifier.add(exercise);
+        if (widget.isNew) {
+          exerciseListNotifier.add(exercise);
+        } else {
+          exerciseListNotifier.update(widget.exerciseId!, exercise);
+        }
 
         weightedButtonNotifier.reset();
         timedButtonNotifier.reset();

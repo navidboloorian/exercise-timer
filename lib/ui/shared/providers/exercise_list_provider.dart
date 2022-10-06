@@ -12,7 +12,20 @@ class ExerciseListNotifier extends StateNotifier<List<Exercise>> {
   }
 
   void add(Exercise exercise) async {
+    DatabaseHelper.insertExercise(exercise);
     state = await DatabaseHelper.getExercises();
+  }
+
+  void update(int id, Exercise exerciseToUpdate) {
+    for (int i = 0; i < state.length; i++) {
+      if (state[i].id == id) {
+        state[i] = exerciseToUpdate;
+
+        break;
+      }
+    }
+
+    state = state;
   }
 
   void delete(Exercise exerciseToDelete) async {

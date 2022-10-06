@@ -85,6 +85,22 @@ class DatabaseHelper {
     await db.insert(_exerciseTable, exercise.toMap());
   }
 
+  static Future<void> updateExercise(int id, Exercise exercise) async {
+    final Database db = await initializeDB();
+
+    Map<String, Object?> exerciseMap = exercise.toMap();
+
+    // don't want to insert id upon update, already exists
+    exerciseMap.remove('id');
+
+    await db.update(
+      _exerciseTable,
+      exerciseMap,
+      where: 'id=?',
+      whereArgs: [id],
+    );
+  }
+
   static Future<List<Exercise>> getExercises() async {
     final Database db = await initializeDB();
     final List<Map<String, Object?>> queryResult =
