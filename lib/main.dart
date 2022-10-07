@@ -3,6 +3,7 @@ import 'package:exercise_timer/ui/shared/providers/routine_list_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'ui/pages/routines/active_routine.dart';
 import 'utils/themes.dart';
 import 'ui/pages/pages.dart';
 import 'db/database_helper.dart';
@@ -68,7 +69,7 @@ class _AppState extends ConsumerState<App> {
         if (route.name == 'view_exercise') {
           return MaterialPageRoute(
             builder: (context) => ViewExercise(
-              isNew: arguments.isNew,
+              isNew: arguments.isNew!,
               exerciseId: arguments.exerciseId,
             ),
           );
@@ -77,8 +78,16 @@ class _AppState extends ConsumerState<App> {
         if (route.name == 'view_routine') {
           return MaterialPageRoute(
             builder: (context) => ViewRoutine(
-              isNew: arguments.isNew,
+              isNew: arguments.isNew!,
               routineId: arguments.routineId,
+            ),
+          );
+        }
+
+        if (route.name == 'active_routine') {
+          return MaterialPageRoute(
+            builder: (context) => ActiveRoutine(
+              routineId: arguments.routineId!,
             ),
           );
         }

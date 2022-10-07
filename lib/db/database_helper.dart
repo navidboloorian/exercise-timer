@@ -95,12 +95,16 @@ class DatabaseHelper {
     // don't want to insert id upon update, already exists
     exerciseMap.remove('id');
 
-    await db.update(
+    print(exerciseMap['description']);
+
+    var answer = await db.update(
       _exerciseTable,
       exerciseMap,
       where: '$_idCol=?',
       whereArgs: [id],
     );
+
+    print(answer);
   }
 
   static Future<List<Exercise>> getExercises() async {

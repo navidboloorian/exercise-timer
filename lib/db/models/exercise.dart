@@ -1,12 +1,12 @@
 class Exercise {
-  final int? id;
+  int? id;
   final String name;
   final String description;
   final bool isTimed;
   final bool isWeighted;
   final List<String> tags;
 
-  const Exercise({
+  Exercise({
     this.id,
     required this.name,
     required this.description,
@@ -21,7 +21,10 @@ class Exercise {
         description = map['description'],
         isTimed = map['isTimed'] == 1 ? true : false,
         isWeighted = map['isWeighted'] == 1 ? true : false,
-        tags = map['tags'].isNotEmpty ? map['tags'].split(',') : [];
+        tags = map['tags'].isNotEmpty ? map['tags'].split(',') : [] {
+    print('timed: $isTimed');
+    print('weighted: $isWeighted');
+  }
 
   Map<String, Object?> toMap() {
     return {

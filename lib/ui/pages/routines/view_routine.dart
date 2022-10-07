@@ -44,6 +44,8 @@ class _ViewRoutineState extends ConsumerState<ViewRoutine> {
   final List<TextEditingController> weightControllerList =
       <TextEditingController>[];
 
+  bool _isLoading = true;
+
   void _scrollIntoView() {
     _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
   }
@@ -51,6 +53,13 @@ class _ViewRoutineState extends ConsumerState<ViewRoutine> {
   @override
   void initState() {
     super.initState();
+
+    void clearRoutineExerciseList() {
+      final routineExerciseList =
+          ref.read(routineExerciseListProvider.notifier);
+
+      routineExerciseList.clear();
+    }
 
     void setEditableRoutine() async {
       // call .read because the value only needs to be accessed once
@@ -69,6 +78,7 @@ class _ViewRoutineState extends ConsumerState<ViewRoutine> {
       routineExerciseList.set(routineExercises);
 
       for (RoutineExercise routineExercise in routineExercises) {
+        print('called');
         if (routineExercise.exercise.isTimed) {
           repTimeControllerList.add(TextEditingController(
               text: TimeValidation.toTime(routineExercise.time!)));
@@ -89,9 +99,18 @@ class _ViewRoutineState extends ConsumerState<ViewRoutine> {
         setControllerList
             .add(TextEditingController(text: routineExercise.sets.toString()));
       }
+
+      setState(() {
+        _isLoading = false;
+      });
     }
 
-    if (!widget.isNew) {
+    if (widget.isNew) {
+      clearRoutineExerciseList();
+      setState(() {
+        _isLoading = false;
+      });
+    } else {
       setEditableRoutine();
     }
   }
@@ -110,220 +129,250 @@ class _ViewRoutineState extends ConsumerState<ViewRoutine> {
       weightControllerList[i].dispose();
     }
 
-    // TODO: dispose of all controllers
+    restControllerList.clear();
+    setControllerList.clear();
+    repTimeControllerList.clear();
+    weightControllerList.clear();
   }
 
   @override
   Widget build(BuildContext context) {
-    // list of all routines
-    final routineList = ref.watch(routineListProvider.notifier);
+    if (_isLoading) {
+      return Container();
+    } else {
+      // list of all routines
+      final routineList = ref.watch(routineListProvider.notifier);
 
-    // list of the current exercises in the current routine
-    final routineExerciseListRead = ref.watch(routineExerciseListProvider);
-    final routineExerciseList = ref.watch(routineExerciseListProvider.notifier);
+      // list of the current exercises in the current routine
+      final routineExerciseListRead = ref.watch(routineExerciseListProvider);
+      final routineExerciseList =
+          ref.watch(routineExerciseListProvider.notifier);
 
-    Widget buildWidget(int index, RoutineExercise exercise) {
-      restControllerList.add(TextEditingController());
-      setControllerList.add(TextEditingController(text: '1'));
-      repTimeControllerList.add(TextEditingController());
-      weightControllerList.add(TextEditingController(text: '1'));
-
-      return Dismissible(
-        background: Container(
-          width: MediaQuery.of(context).size.width,
-          color: CustomColors.removeRed,
-          child: const Center(child: Icon(Icons.remove_circle)),
-        ),
-        key: UniqueKey(),
-        onDismissed: (direction) {
-          routineExerciseList.delete(exercise);
-        },
-        child: RoutineExerciseBox(
-          key: UniqueKey(),
-          restController: restControllerList[index],
-          setController: setControllerList[index],
-          repTimeController: repTimeControllerList[index],
-          weightController: weightControllerList[index],
-          routineExercise: routineExerciseListRead[index],
-        ),
-      );
-    }
-
-    // generate list of widgets to render to the screen
-    List<Widget> getRoutineExerciseList() => routineExerciseListRead
-        .asMap()
-        .map((index, exercise) => MapEntry(index, buildWidget(index, exercise)))
-        .values
-        .toList();
-
-    // styles the drag style of the items in the list
-    Widget proxyDecorator(
-        Widget child, int index, Animation<double> animation) {
-      return AnimatedBuilder(
-        animation: animation,
-        builder: (BuildContext context, Widget? child) {
-          return Material(
-            elevation: 0,
-            color: CustomColors.darkBackground,
-            shadowColor: CustomColors.darkBackground,
-            child: child,
-          );
-        },
-        child: child,
-      );
-    }
-
-    void submitForm() async {
-      if (_formKey.currentState!.validate()) {
-        String name = _nameController.text;
-        String description = 'blank';
-        List<String> tagsList = [];
-
-        if (_tagsController.text.isNotEmpty) {
-          tagsList = _tagsController.text.split(',');
+      Widget buildWidget(int index, RoutineExercise exercise) {
+        if (index >= restControllerList.length) {
+          restControllerList.add(TextEditingController());
+          setControllerList.add(TextEditingController(text: '1'));
+          repTimeControllerList.add(TextEditingController());
+          weightControllerList.add(TextEditingController(text: '1'));
         }
 
-        Routine routine;
-
-        int routineId;
-
-        if (widget.isNew) {
-          routine =
-              Routine(name: name, description: description, tags: tagsList);
-          routineId = await routineList.add(routine);
-        } else {
-          routine = await DatabaseHelper.getRoutine(widget.routineId!);
-          routineId = widget.routineId!;
-          await DatabaseHelper.deleteRoutineExercises(routineId);
-          await DatabaseHelper.updateRoutine(routineId, routine);
-
-          routineList.update();
-        }
-
-        for (int i = 0; i < routineExerciseListRead.length; i++) {
-          RoutineExercise routineExercise = routineExerciseListRead[i];
-
-          if (routineExercise.exercise.isTimed) {
-            routineExercise.reps =
-                TimeValidation.toSeconds(repTimeControllerList[i].text);
-          } else {
-            routineExercise.reps = int.parse(repTimeControllerList[i].text);
-          }
-
-          if (routineExercise.exercise.isWeighted) {
-            routineExercise.weight = int.parse(weightControllerList[i].text);
-          }
-
-          routineExercise.routineId = routineId;
-          routineExercise.exerciseId = routineExercise.exercise.id;
-          routineExercise.sets = int.parse(setControllerList[i].text);
-          routineExercise.rest =
-              TimeValidation.toSeconds(restControllerList[i].text);
-
-          DatabaseHelper.insertRoutineExercise(routineExercise.toMap());
-        }
-
-        routineExerciseList.clear();
-
-        // makes sure the widget is still mounted if we want to pop context
-        if (!mounted) return;
-
-        Navigator.pop(context);
-      }
-    }
-
-    return Scaffold(
-      resizeToAvoidBottomInset: true,
-      appBar: AppBar(
-        title: widget.isNew
-            ? const Text('Create Routine')
-            : const Text('View Routine'),
-        actions: [
-          IconButton(
-            onPressed: submitForm,
-            icon: const Icon(
-              Icons.check,
-              color: Colors.white,
-            ),
+        return Dismissible(
+          background: Container(
+            width: MediaQuery.of(context).size.width,
+            color: CustomColors.removeRed,
+            child: const Center(child: Icon(Icons.remove_circle)),
           ),
-          const SizedBox(
-            width: 10,
-          )
-        ],
-      ),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          controller: _scrollController,
-          physics: const AlwaysScrollableScrollPhysics(),
-          children: [
-            Center(
-              child: Column(
-                children: [
-                  DropShadowContainer(
-                    child: TextFormField(
-                      maxLines: null,
-                      maxLength: 75,
-                      decoration: const InputDecoration(
-                        hintText: 'Routine name',
-                        counterText: '',
-                      ),
-                      controller: _nameController,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'A name is required';
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
-                  DropShadowContainer(
-                    child: TextFormField(
-                      maxLines: null,
-                      decoration: const InputDecoration(
-                        hintText: 'Tags (separate with commas)',
-                        counterText: '',
-                      ),
-                      controller: _tagsController,
-                    ),
-                  ),
-                  ReorderableListView(
-                    physics: const NeverScrollableScrollPhysics(),
-                    shrinkWrap: true,
-                    proxyDecorator: proxyDecorator,
-                    onReorder: ((oldIndex, newIndex) {
-                      routineExerciseList.updatePosition(oldIndex, newIndex);
+          key: UniqueKey(),
+          onDismissed: (direction) {
+            routineExerciseList.delete(exercise);
+          },
+          child: RoutineExerciseBox(
+            key: UniqueKey(),
+            restController: restControllerList[index],
+            setController: setControllerList[index],
+            repTimeController: repTimeControllerList[index],
+            weightController: weightControllerList[index],
+            routineExercise: routineExerciseListRead[index],
+          ),
+        );
+      }
 
-                      if (oldIndex < newIndex) {
-                        newIndex -= 1;
-                      }
+      // generate list of widgets to render to the screen
+      List<Widget> getRoutineExerciseList() => routineExerciseListRead
+          .asMap()
+          .map((index, exercise) =>
+              MapEntry(index, buildWidget(index, exercise)))
+          .values
+          .toList();
 
-                      setState(() {
-                        final TextEditingController restController =
-                            restControllerList.removeAt(oldIndex);
-                        restControllerList.insert(newIndex, restController);
+      // styles the drag style of the items in the list
+      Widget proxyDecorator(
+          Widget child, int index, Animation<double> animation) {
+        return AnimatedBuilder(
+          animation: animation,
+          builder: (BuildContext context, Widget? child) {
+            return Material(
+              elevation: 0,
+              color: CustomColors.darkBackground,
+              shadowColor: CustomColors.darkBackground,
+              child: child,
+            );
+          },
+          child: child,
+        );
+      }
 
-                        final TextEditingController setContoller =
-                            setControllerList.removeAt(oldIndex);
-                        setControllerList.insert(newIndex, setContoller);
+      void submitForm() async {
+        if (_formKey.currentState!.validate()) {
+          String name = _nameController.text;
+          String description = 'blank';
+          List<String> tagsList = [];
 
-                        final TextEditingController repTimeController =
-                            repTimeControllerList.removeAt(oldIndex);
-                        repTimeControllerList.insert(
-                            newIndex, repTimeController);
-                      });
-                    }),
-                    children: getRoutineExerciseList(),
-                  ),
-                  ExerciseSearchAutocomplete(focusBehavior: _scrollIntoView),
-                  const SizedBox(height: 136),
-                ],
+          if (_tagsController.text.isNotEmpty) {
+            tagsList = _tagsController.text.split(',');
+          }
+
+          Routine routine;
+          int routineId;
+
+          if (widget.isNew) {
+            routine =
+                Routine(name: name, description: description, tags: tagsList);
+            routineId = await routineList.add(routine);
+          } else {
+            routine = await DatabaseHelper.getRoutine(widget.routineId!);
+            routineId = widget.routineId!;
+
+            await DatabaseHelper.deleteRoutineExercises(routineId);
+            await DatabaseHelper.updateRoutine(routineId, routine);
+
+            routineList.update();
+          }
+
+          for (int i = 0; i < routineExerciseListRead.length; i++) {
+            RoutineExercise routineExercise = routineExerciseListRead[i];
+
+            if (routineExercise.exercise.isTimed) {
+              routineExercise.time =
+                  TimeValidation.toSeconds(repTimeControllerList[i].text);
+            } else {
+              routineExercise.reps = int.parse(repTimeControllerList[i].text);
+            }
+
+            if (routineExercise.exercise.isWeighted) {
+              routineExercise.weight = int.parse(weightControllerList[i].text);
+            }
+
+            routineExercise.routineId = routineId;
+            routineExercise.exerciseId = routineExercise.exercise.id;
+            routineExercise.sets = int.parse(setControllerList[i].text);
+            routineExercise.rest =
+                TimeValidation.toSeconds(restControllerList[i].text);
+
+            DatabaseHelper.insertRoutineExercise(routineExercise.toMap());
+          }
+
+          // makes sure the widget is still mounted if we want to pop context
+          if (!mounted) return;
+
+          Navigator.pop(context);
+        }
+      }
+
+      return Scaffold(
+        resizeToAvoidBottomInset: true,
+        appBar: AppBar(
+          title: widget.isNew
+              ? const Text('Create Routine')
+              : const Text('View Routine'),
+          actions: [
+            IconButton(
+              onPressed: submitForm,
+              icon: const Icon(
+                Icons.check,
+                color: Colors.white,
               ),
             ),
+            const SizedBox(
+              width: 10,
+            )
           ],
         ),
-      ),
-    );
+        body: Form(
+          key: _formKey,
+          child: ListView(
+            controller: _scrollController,
+            physics: const AlwaysScrollableScrollPhysics(),
+            children: [
+              Center(
+                child: Column(
+                  children: [
+                    DropShadowContainer(
+                      child: TextFormField(
+                        maxLines: null,
+                        maxLength: 75,
+                        decoration: const InputDecoration(
+                          hintText: 'Routine name',
+                          counterText: '',
+                        ),
+                        controller: _nameController,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'A name is required';
+                          }
+                          return null;
+                        },
+                      ),
+                    ),
+                    DropShadowContainer(
+                      child: TextFormField(
+                        maxLines: null,
+                        decoration: const InputDecoration(
+                          hintText: 'Tags (separate with commas)',
+                          counterText: '',
+                        ),
+                        controller: _tagsController,
+                      ),
+                    ),
+                    ReorderableListView(
+                      physics: const NeverScrollableScrollPhysics(),
+                      shrinkWrap: true,
+                      proxyDecorator: proxyDecorator,
+                      onReorder: ((oldIndex, newIndex) {
+                        routineExerciseList.updatePosition(oldIndex, newIndex);
+
+                        if (oldIndex < newIndex) {
+                          newIndex -= 1;
+                        }
+
+                        setState(() {
+                          final TextEditingController restController =
+                              restControllerList.removeAt(oldIndex);
+                          restControllerList.insert(newIndex, restController);
+
+                          final TextEditingController setContoller =
+                              setControllerList.removeAt(oldIndex);
+                          setControllerList.insert(newIndex, setContoller);
+
+                          final TextEditingController repTimeController =
+                              repTimeControllerList.removeAt(oldIndex);
+                          repTimeControllerList.insert(
+                              newIndex, repTimeController);
+
+                          final TextEditingController weightController =
+                              weightControllerList.removeAt(oldIndex);
+                          weightControllerList.insert(
+                              newIndex, weightController);
+                        });
+                      }),
+                      children: getRoutineExerciseList(),
+                    ),
+                    ExerciseSearchAutocomplete(focusBehavior: _scrollIntoView),
+                    const SizedBox(height: 136),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        bottomNavigationBar: widget.isNew && routineExerciseListRead.isNotEmpty
+            ? null
+            : BottomAppBar(
+                color: CustomColors.darkText,
+                child: TextButton(
+                  onPressed: () => Navigator.pushNamed(
+                    context,
+                    arguments: PageArguments(routineId: widget.routineId!),
+                    'active_routine',
+                  ),
+                  child: const Text(
+                    'START',
+                    style: TextStyle(color: CustomColors.darkBackground),
+                  ),
+                ),
+              ),
+      );
+    }
   }
 }
 

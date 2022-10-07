@@ -46,8 +46,8 @@ class _ViewExerciseState extends ConsumerState<ViewExercise> {
       _descriptionController.text = editableExercise.description;
       _tagsController.text = editableExercise.tags.join(',');
 
-      weightedButtonValue.set(editableExercise.isTimed);
-      timedButtonValue.set(editableExercise.isWeighted);
+      weightedButtonValue.set(editableExercise.isWeighted);
+      timedButtonValue.set(editableExercise.isTimed);
     }
 
     if (!widget.isNew) {
@@ -96,9 +96,13 @@ class _ViewExerciseState extends ConsumerState<ViewExercise> {
           tags: tagsList,
         );
 
+        print(exercise.isTimed);
+        print(exercise.isWeighted);
+
         if (widget.isNew) {
           exerciseListNotifier.add(exercise);
         } else {
+          exercise.id = widget.exerciseId!;
           exerciseListNotifier.update(widget.exerciseId!, exercise);
         }
 
@@ -132,55 +136,105 @@ class _ViewExerciseState extends ConsumerState<ViewExercise> {
       body: Center(
         child: Form(
           key: _formKey,
-          child: Column(
+          child: ListView(
             children: [
-              DropShadowContainer(
-                child: TextFormField(
-                  maxLines: null,
-                  maxLength: 75,
-                  decoration: const InputDecoration(
-                    hintText: 'Exercise name',
-                    counterText: '',
+              Row(
+                children: [
+                  SizedBox(
+                    width: MediaQuery.of(context).size.width * 0.05,
                   ),
-                  controller: _nameController,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'A name is required';
-                    }
-                    return null;
-                  },
-                ),
-              ),
-              SwitchButton(
-                falseOption: 'Reps',
-                trueOption: 'Time',
-                switchButtonFamily: _timedSwitchButton,
-              ),
-              SwitchButton(
-                falseOption: 'Not Weighted',
-                trueOption: 'Weighted',
-                switchButtonFamily: _weightedSwitchButton,
-              ),
-              DropShadowContainer(
-                child: TextFormField(
-                  minLines: 5,
-                  maxLines: null,
-                  decoration: const InputDecoration(
-                    hintText: 'Description',
-                    counterText: '',
+                  DropShadowContainer(
+                    child: TextFormField(
+                      maxLines: null,
+                      maxLength: 75,
+                      decoration: const InputDecoration(
+                        hintText: 'Exercise name',
+                        counterText: '',
+                      ),
+                      controller: _nameController,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'A name is required';
+                        }
+                        return null;
+                      },
+                    ),
                   ),
-                  controller: _descriptionController,
-                ),
-              ),
-              DropShadowContainer(
-                child: TextFormField(
-                  maxLines: null,
-                  decoration: const InputDecoration(
-                    hintText: 'Tags (separate with commas)',
-                    counterText: '',
+                  SizedBox(
+                    width: MediaQuery.of(context).size.width * 0.05,
                   ),
-                  controller: _tagsController,
-                ),
+                ],
+              ),
+              Row(
+                children: [
+                  SizedBox(
+                    width: MediaQuery.of(context).size.width * 0.05,
+                  ),
+                  SwitchButton(
+                    falseOption: 'Reps',
+                    trueOption: 'Time',
+                    switchButtonFamily: _timedSwitchButton,
+                  ),
+                  SizedBox(
+                    width: MediaQuery.of(context).size.width * 0.05,
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  SizedBox(
+                    width: MediaQuery.of(context).size.width * 0.05,
+                  ),
+                  SwitchButton(
+                    falseOption: 'Not Weighted',
+                    trueOption: 'Weighted',
+                    switchButtonFamily: _weightedSwitchButton,
+                  ),
+                  SizedBox(
+                    width: MediaQuery.of(context).size.width * 0.05,
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  SizedBox(
+                    width: MediaQuery.of(context).size.width * 0.05,
+                  ),
+                  DropShadowContainer(
+                    child: TextFormField(
+                      minLines: 5,
+                      maxLines: null,
+                      decoration: const InputDecoration(
+                        hintText: 'Description',
+                        counterText: '',
+                      ),
+                      controller: _descriptionController,
+                    ),
+                  ),
+                  SizedBox(
+                    width: MediaQuery.of(context).size.width * 0.05,
+                  ),
+                ],
+              ),
+              Row(
+                children: [
+                  SizedBox(
+                    width: MediaQuery.of(context).size.width * 0.05,
+                  ),
+                  DropShadowContainer(
+                    child: TextFormField(
+                      maxLines: null,
+                      decoration: const InputDecoration(
+                        hintText: 'Tags (separate with commas)',
+                        counterText: '',
+                      ),
+                      controller: _tagsController,
+                    ),
+                  ),
+                  SizedBox(
+                    width: MediaQuery.of(context).size.width * 0.05,
+                  ),
+                ],
               ),
             ],
           ),

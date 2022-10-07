@@ -21,6 +21,8 @@ class ExerciseListNotifier extends StateNotifier<List<Exercise>> {
   }
 
   void update(int id, Exercise exerciseToUpdate) {
+    DatabaseHelper.updateExercise(id, exerciseToUpdate);
+
     for (int i = 0; i < state.length; i++) {
       if (state[i].id == id) {
         state[i] = exerciseToUpdate;
