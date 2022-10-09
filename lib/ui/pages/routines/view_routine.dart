@@ -11,8 +11,6 @@ import '../../../db/models/shared_models.dart';
 import '../../../db/database_helper.dart';
 import '../../../utils/colors.dart';
 
-final formKey = GlobalKey();
-
 class ViewRoutine extends ConsumerStatefulWidget {
   final bool isNew;
   final int? routineId;
@@ -35,13 +33,13 @@ class _ViewRoutineState extends ConsumerState<ViewRoutine> {
   final _nameController = TextEditingController();
   final _tagsController = TextEditingController();
 
-  final List<TextEditingController> restControllerList =
+  final List<TextEditingController> _restControllerList =
       <TextEditingController>[];
-  final List<TextEditingController> setControllerList =
+  final List<TextEditingController> _setControllerList =
       <TextEditingController>[];
-  final List<TextEditingController> repTimeControllerList =
+  final List<TextEditingController> _repTimeControllerList =
       <TextEditingController>[];
-  final List<TextEditingController> weightControllerList =
+  final List<TextEditingController> _weightControllerList =
       <TextEditingController>[];
 
   bool _isLoading = true;
@@ -78,25 +76,24 @@ class _ViewRoutineState extends ConsumerState<ViewRoutine> {
       routineExerciseList.set(routineExercises);
 
       for (RoutineExercise routineExercise in routineExercises) {
-        print('called');
         if (routineExercise.exercise.isTimed) {
-          repTimeControllerList.add(TextEditingController(
+          _repTimeControllerList.add(TextEditingController(
               text: TimeValidation.toTime(routineExercise.time!)));
         } else {
-          repTimeControllerList.add(
+          _repTimeControllerList.add(
               TextEditingController(text: routineExercise.reps.toString()));
         }
 
         if (routineExercise.exercise.isWeighted) {
-          weightControllerList.add(
+          _weightControllerList.add(
               TextEditingController(text: routineExercise.weight.toString()));
         } else {
-          weightControllerList.add(TextEditingController());
+          _weightControllerList.add(TextEditingController());
         }
 
-        restControllerList.add(TextEditingController(
+        _restControllerList.add(TextEditingController(
             text: TimeValidation.toTime(routineExercise.rest)));
-        setControllerList
+        _setControllerList
             .add(TextEditingController(text: routineExercise.sets.toString()));
       }
 
@@ -122,17 +119,17 @@ class _ViewRoutineState extends ConsumerState<ViewRoutine> {
     _nameController.dispose();
     _tagsController.dispose();
 
-    for (int i = 0; i < restControllerList.length; i++) {
-      restControllerList[i].dispose();
-      setControllerList[i].dispose();
-      repTimeControllerList[i].dispose();
-      weightControllerList[i].dispose();
+    for (int i = 0; i < _restControllerList.length; i++) {
+      _restControllerList[i].dispose();
+      _setControllerList[i].dispose();
+      _repTimeControllerList[i].dispose();
+      _weightControllerList[i].dispose();
     }
 
-    restControllerList.clear();
-    setControllerList.clear();
-    repTimeControllerList.clear();
-    weightControllerList.clear();
+    _restControllerList.clear();
+    _setControllerList.clear();
+    _repTimeControllerList.clear();
+    _weightControllerList.clear();
   }
 
   @override
@@ -149,29 +146,28 @@ class _ViewRoutineState extends ConsumerState<ViewRoutine> {
           ref.watch(routineExerciseListProvider.notifier);
 
       Widget buildWidget(int index, RoutineExercise exercise) {
-        if (index >= restControllerList.length) {
-          restControllerList.add(TextEditingController());
-          setControllerList.add(TextEditingController(text: '1'));
-          repTimeControllerList.add(TextEditingController());
-          weightControllerList.add(TextEditingController(text: '1'));
+        if (index >= _restControllerList.length) {
+          _restControllerList.add(TextEditingController());
+          _setControllerList.add(TextEditingController(text: '1'));
+          _repTimeControllerList.add(TextEditingController());
+          _weightControllerList.add(TextEditingController(text: '1'));
         }
 
         return Dismissible(
+          key: UniqueKey(),
           background: Container(
-            width: MediaQuery.of(context).size.width,
             color: CustomColors.removeRed,
             child: const Center(child: Icon(Icons.remove_circle)),
           ),
-          key: UniqueKey(),
           onDismissed: (direction) {
             routineExerciseList.delete(exercise);
           },
           child: RoutineExerciseBox(
             key: UniqueKey(),
-            restController: restControllerList[index],
-            setController: setControllerList[index],
-            repTimeController: repTimeControllerList[index],
-            weightController: weightControllerList[index],
+            restController: _restControllerList[index],
+            setController: _setControllerList[index],
+            repTimeController: _repTimeControllerList[index],
+            weightController: _weightControllerList[index],
             routineExercise: routineExerciseListRead[index],
           ),
         );
@@ -234,20 +230,20 @@ class _ViewRoutineState extends ConsumerState<ViewRoutine> {
 
             if (routineExercise.exercise.isTimed) {
               routineExercise.time =
-                  TimeValidation.toSeconds(repTimeControllerList[i].text);
+                  TimeValidation.toSeconds(_repTimeControllerList[i].text);
             } else {
-              routineExercise.reps = int.parse(repTimeControllerList[i].text);
+              routineExercise.reps = int.parse(_repTimeControllerList[i].text);
             }
 
             if (routineExercise.exercise.isWeighted) {
-              routineExercise.weight = int.parse(weightControllerList[i].text);
+              routineExercise.weight = int.parse(_weightControllerList[i].text);
             }
 
             routineExercise.routineId = routineId;
             routineExercise.exerciseId = routineExercise.exercise.id;
-            routineExercise.sets = int.parse(setControllerList[i].text);
+            routineExercise.sets = int.parse(_setControllerList[i].text);
             routineExercise.rest =
-                TimeValidation.toSeconds(restControllerList[i].text);
+                TimeValidation.toSeconds(_restControllerList[i].text);
 
             DatabaseHelper.insertRoutineExercise(routineExercise.toMap());
           }
@@ -327,21 +323,21 @@ class _ViewRoutineState extends ConsumerState<ViewRoutine> {
 
                         setState(() {
                           final TextEditingController restController =
-                              restControllerList.removeAt(oldIndex);
-                          restControllerList.insert(newIndex, restController);
+                              _restControllerList.removeAt(oldIndex);
+                          _restControllerList.insert(newIndex, restController);
 
                           final TextEditingController setContoller =
-                              setControllerList.removeAt(oldIndex);
-                          setControllerList.insert(newIndex, setContoller);
+                              _setControllerList.removeAt(oldIndex);
+                          _setControllerList.insert(newIndex, setContoller);
 
                           final TextEditingController repTimeController =
-                              repTimeControllerList.removeAt(oldIndex);
-                          repTimeControllerList.insert(
+                              _repTimeControllerList.removeAt(oldIndex);
+                          _repTimeControllerList.insert(
                               newIndex, repTimeController);
 
                           final TextEditingController weightController =
-                              weightControllerList.removeAt(oldIndex);
-                          weightControllerList.insert(
+                              _weightControllerList.removeAt(oldIndex);
+                          _weightControllerList.insert(
                               newIndex, weightController);
                         });
                       }),
@@ -587,6 +583,7 @@ class _RoutineExerciseBoxState extends ConsumerState<RoutineExerciseBox> {
                 Align(
                   alignment: Alignment.center,
                   child: TextFormField(
+                    key: UniqueKey(),
                     textAlign: TextAlign.center,
                     maxLength: 7,
                     controller: widget.weightController,
@@ -626,7 +623,8 @@ class _RoutineExerciseBoxState extends ConsumerState<RoutineExerciseBox> {
               children: [
                 Align(
                   alignment: Alignment.center,
-                  child: TextField(
+                  child: TextFormField(
+                    key: UniqueKey(),
                     controller: widget.repTimeController,
                     decoration: const InputDecoration(hintText: '00:00'),
                     inputFormatters: [
@@ -658,6 +656,7 @@ class _RoutineExerciseBoxState extends ConsumerState<RoutineExerciseBox> {
                 Align(
                   alignment: Alignment.center,
                   child: TextFormField(
+                    key: UniqueKey(),
                     textAlign: TextAlign.center,
                     maxLength: 2,
                     controller: widget.repTimeController,
@@ -702,7 +701,8 @@ class _RoutineExerciseBoxState extends ConsumerState<RoutineExerciseBox> {
                         children: [
                           Align(
                             alignment: Alignment.center,
-                            child: TextField(
+                            child: TextFormField(
+                              key: UniqueKey(),
                               controller: widget.restController,
                               decoration:
                                   const InputDecoration(hintText: '00:00'),
@@ -732,6 +732,7 @@ class _RoutineExerciseBoxState extends ConsumerState<RoutineExerciseBox> {
                           Align(
                             alignment: Alignment.center,
                             child: TextFormField(
+                              key: UniqueKey(),
                               textAlign: TextAlign.center,
                               maxLength: 2,
                               controller: widget.setController,

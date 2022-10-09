@@ -26,6 +26,8 @@ class _ActiveRoutineState extends ConsumerState<ActiveRoutine> {
   int _setsLeft = 0;
   int _timerMinutes = 0;
   int _timerSeconds = 0;
+  bool _isTimerRunning = false;
+  bool _isTimerDone = false;
   late Timer _timer;
 
   @override
@@ -40,6 +42,7 @@ class _ActiveRoutineState extends ConsumerState<ActiveRoutine> {
         () {
           _isLoading = false;
           _routineExerciseList = _routineExerciseList;
+          _setsLeft = _routineExerciseList[0].sets!;
         },
       );
     }
@@ -47,16 +50,34 @@ class _ActiveRoutineState extends ConsumerState<ActiveRoutine> {
     setRoutineExerciseList();
   }
 
-  void startTimer(RoutineExercise exercise) {
+  String addZeroToTime(String time) {
+    if (time.length == 1) {
+      time = '0$time';
+    }
+
+    return time;
+  }
+
+  void resetTimer() {
     setState(() {
-      _timerSeconds = exercise.time!;
+      _isTimerDone = false;
+      _isTimerRunning = false;
+    });
+  }
+
+  void startTimer(RoutineExercise currentExercise) {
+    setState(() {
+      _timerSeconds = currentExercise.time!;
       _timerMinutes = _timerSeconds ~/ 60;
       _timerSeconds %= 60;
     });
 
+    _isTimerRunning = true;
+
     _timer = Timer.periodic(const Duration(seconds: 1), (Timer timer) {
       if (_timerMinutes == 0 && _timerSeconds == 0) {
         setState(() {
+          _isTimerDone = true;
           _timer.cancel();
         });
       } else if (_timerSeconds == 0) {
@@ -65,9 +86,21 @@ class _ActiveRoutineState extends ConsumerState<ActiveRoutine> {
           _timerSeconds = 59;
         });
       } else {
-        _timerSeconds--;
+        setState(() {
+          _timerSeconds--;
+        });
       }
     });
+  }
+
+  void setNextExercise(RoutineExercise currentExercise) {
+    if (_setsLeft > 0) {
+      setState(() {
+        _setsLeft--;
+      });
+    } else {
+      _currentIndex++;
+    }
   }
 
   @override
@@ -82,15 +115,16 @@ class _ActiveRoutineState extends ConsumerState<ActiveRoutine> {
       return const Text('Loading');
     } else {
       RoutineExercise currentExercise = _routineExerciseList[_currentIndex];
-      String timerText = '$_timerSeconds';
+      String timerMinuteText = addZeroToTime('$_timerMinutes');
+      String timerSecondText = addZeroToTime('$_timerSeconds');
+      String timerText = '$timerMinuteText:$timerSecondText';
 
-      if (currentExercise.exercise.isTimed) {
+      if (currentExercise.exercise.isTimed && !_isTimerRunning) {
         startTimer(currentExercise);
+      } else if (currentExercise.exercise.isTimed && _isTimerDone) {
+        resetTimer();
+        setNextExercise(currentExercise);
       }
-
-      setState(() {
-        _setsLeft = currentExercise.sets!;
-      });
 
       return Scaffold(
         backgroundColor: CustomColors.darkText,
@@ -124,7 +158,8 @@ class _ActiveRoutineState extends ConsumerState<ActiveRoutine> {
                       ),
                       Text(
                         '$_setsLeft sets',
-                        style: TextStyle(color: CustomColors.darkBackground),
+                        style:
+                            const TextStyle(color: CustomColors.darkBackground),
                       ),
                       currentExercise.exercise.description.isNotEmpty
                           ? DropShadowContainer(

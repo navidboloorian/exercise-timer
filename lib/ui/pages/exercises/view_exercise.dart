@@ -96,9 +96,6 @@ class _ViewExerciseState extends ConsumerState<ViewExercise> {
           tags: tagsList,
         );
 
-        print(exercise.isTimed);
-        print(exercise.isWeighted);
-
         if (widget.isNew) {
           exerciseListNotifier.add(exercise);
         } else {
