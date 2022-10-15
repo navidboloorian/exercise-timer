@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -145,6 +146,100 @@ class _ViewRoutineState extends ConsumerState<ViewRoutine> {
       final routineExerciseList =
           ref.watch(routineExerciseListProvider.notifier);
 
+      void submitForm() async {
+        if (_formKey.currentState!.validate()) {
+          String name = _nameController.text;
+          String description = 'blank';
+          List<String> tagsList = [];
+
+          if (_tagsController.text.isNotEmpty) {
+            tagsList = _tagsController.text.split(',');
+          }
+
+          Routine routine =
+              Routine(name: name, description: description, tags: tagsList);
+          int routineId = await routineList.add(routine);
+
+          for (int i = 0; i < routineExerciseListRead.length; i++) {
+            RoutineExercise routineExercise = routineExerciseListRead[i];
+
+            if (routineExercise.exercise.isTimed) {
+              routineExercise.time =
+                  TimeValidation.toSeconds(_repTimeControllerList[i].text);
+            } else {
+              routineExercise.reps = int.parse(_repTimeControllerList[i].text);
+            }
+
+            if (routineExercise.exercise.isWeighted) {
+              routineExercise.weight = int.parse(_weightControllerList[i].text);
+            }
+
+            routineExercise.routineId = routineId;
+            routineExercise.exerciseId = routineExercise.exercise.id;
+            routineExercise.sets = int.parse(_setControllerList[i].text);
+            routineExercise.rest =
+                TimeValidation.toSeconds(_restControllerList[i].text);
+
+            DatabaseHelper.insertRoutineExercise(routineExercise.toMap());
+          }
+
+          // makes sure the widget is still mounted if we want to pop context
+          if (!mounted) return;
+
+          Navigator.pop(context);
+        }
+      }
+
+      void updateRoutineDetails() async {
+        if (_formKey.currentState!.validate()) {
+          String name = _nameController.text;
+          String description = 'blank';
+          List<String> tagsList = [];
+
+          if (_tagsController.text.isNotEmpty) {
+            tagsList = _tagsController.text.split(',');
+          }
+
+          Routine routine =
+              Routine(name: name, description: description, tags: tagsList);
+
+          await DatabaseHelper.updateRoutine(widget.routineId!, routine);
+
+          routineList.update();
+        }
+      }
+
+      void updateRoutineExercises() async {
+        int routineId = widget.routineId!;
+
+        await DatabaseHelper.deleteRoutineExercises(routineId);
+
+        routineList.update();
+
+        for (int i = 0; i < routineExerciseListRead.length; i++) {
+          RoutineExercise routineExercise = routineExerciseListRead[i];
+
+          if (routineExercise.exercise.isTimed) {
+            routineExercise.time =
+                TimeValidation.toSeconds(_repTimeControllerList[i].text);
+          } else {
+            routineExercise.reps = int.parse(_repTimeControllerList[i].text);
+          }
+
+          if (routineExercise.exercise.isWeighted) {
+            routineExercise.weight = int.parse(_weightControllerList[i].text);
+          }
+
+          routineExercise.routineId = routineId;
+          routineExercise.exerciseId = routineExercise.exercise.id;
+          routineExercise.sets = int.parse(_setControllerList[i].text);
+          routineExercise.rest =
+              TimeValidation.toSeconds(_restControllerList[i].text);
+
+          DatabaseHelper.insertRoutineExercise(routineExercise.toMap());
+        }
+      }
+
       Widget buildWidget(int index, RoutineExercise exercise) {
         if (index >= _restControllerList.length) {
           _restControllerList.add(TextEditingController());
@@ -161,9 +256,11 @@ class _ViewRoutineState extends ConsumerState<ViewRoutine> {
           ),
           onDismissed: (direction) {
             routineExerciseList.delete(exercise);
+            updateRoutineExercises();
           },
           child: RoutineExerciseBox(
             key: UniqueKey(),
+            updateRoutineExercises: updateRoutineExercises,
             restController: _restControllerList[index],
             setController: _setControllerList[index],
             repTimeController: _repTimeControllerList[index],
@@ -198,81 +295,26 @@ class _ViewRoutineState extends ConsumerState<ViewRoutine> {
         );
       }
 
-      void submitForm() async {
-        if (_formKey.currentState!.validate()) {
-          String name = _nameController.text;
-          String description = 'blank';
-          List<String> tagsList = [];
-
-          if (_tagsController.text.isNotEmpty) {
-            tagsList = _tagsController.text.split(',');
-          }
-
-          Routine routine;
-          int routineId;
-
-          if (widget.isNew) {
-            routine =
-                Routine(name: name, description: description, tags: tagsList);
-            routineId = await routineList.add(routine);
-          } else {
-            routine = await DatabaseHelper.getRoutine(widget.routineId!);
-            routineId = widget.routineId!;
-
-            await DatabaseHelper.deleteRoutineExercises(routineId);
-            await DatabaseHelper.updateRoutine(routineId, routine);
-
-            routineList.update();
-          }
-
-          for (int i = 0; i < routineExerciseListRead.length; i++) {
-            RoutineExercise routineExercise = routineExerciseListRead[i];
-
-            if (routineExercise.exercise.isTimed) {
-              routineExercise.time =
-                  TimeValidation.toSeconds(_repTimeControllerList[i].text);
-            } else {
-              routineExercise.reps = int.parse(_repTimeControllerList[i].text);
-            }
-
-            if (routineExercise.exercise.isWeighted) {
-              routineExercise.weight = int.parse(_weightControllerList[i].text);
-            }
-
-            routineExercise.routineId = routineId;
-            routineExercise.exerciseId = routineExercise.exercise.id;
-            routineExercise.sets = int.parse(_setControllerList[i].text);
-            routineExercise.rest =
-                TimeValidation.toSeconds(_restControllerList[i].text);
-
-            DatabaseHelper.insertRoutineExercise(routineExercise.toMap());
-          }
-
-          // makes sure the widget is still mounted if we want to pop context
-          if (!mounted) return;
-
-          Navigator.pop(context);
-        }
-      }
-
       return Scaffold(
         resizeToAvoidBottomInset: true,
         appBar: AppBar(
           title: widget.isNew
               ? const Text('Create Routine')
               : const Text('View Routine'),
-          actions: [
-            IconButton(
-              onPressed: submitForm,
-              icon: const Icon(
-                Icons.check,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(
-              width: 10,
-            )
-          ],
+          actions: widget.isNew
+              ? [
+                  IconButton(
+                    onPressed: submitForm,
+                    icon: const Icon(
+                      Icons.check,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(
+                    width: 10,
+                  )
+                ]
+              : null,
         ),
         body: Form(
           key: _formKey,
@@ -284,30 +326,44 @@ class _ViewRoutineState extends ConsumerState<ViewRoutine> {
                 child: Column(
                   children: [
                     DropShadowContainer(
-                      child: TextFormField(
-                        maxLines: null,
-                        maxLength: 75,
-                        decoration: const InputDecoration(
-                          hintText: 'Routine name',
-                          counterText: '',
-                        ),
-                        controller: _nameController,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'A name is required';
+                      child: Focus(
+                        onFocusChange: (hasFocus) {
+                          if (!hasFocus) {
+                            updateRoutineDetails();
                           }
-                          return null;
                         },
+                        child: TextFormField(
+                          maxLines: null,
+                          maxLength: 75,
+                          decoration: const InputDecoration(
+                            hintText: 'Routine name',
+                            counterText: '',
+                          ),
+                          controller: _nameController,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'A name is required';
+                            }
+                            return null;
+                          },
+                        ),
                       ),
                     ),
                     DropShadowContainer(
-                      child: TextFormField(
-                        maxLines: null,
-                        decoration: const InputDecoration(
-                          hintText: 'Tags (separate with commas)',
-                          counterText: '',
+                      child: Focus(
+                        onFocusChange: (hasFocus) {
+                          if (!hasFocus) {
+                            updateRoutineDetails();
+                          }
+                        },
+                        child: TextFormField(
+                          maxLines: null,
+                          decoration: const InputDecoration(
+                            hintText: 'Tags (separate with commas)',
+                            counterText: '',
+                          ),
+                          controller: _tagsController,
                         ),
-                        controller: _tagsController,
                       ),
                     ),
                     ReorderableListView(
@@ -343,7 +399,10 @@ class _ViewRoutineState extends ConsumerState<ViewRoutine> {
                       }),
                       children: getRoutineExerciseList(),
                     ),
-                    ExerciseSearchAutocomplete(focusBehavior: _scrollIntoView),
+                    ExerciseSearchAutocomplete(
+                      focusBehavior: _scrollIntoView,
+                      updateRoutineExercises: updateRoutineExercises,
+                    ),
                     const SizedBox(height: 136),
                   ],
                 ),
@@ -351,16 +410,25 @@ class _ViewRoutineState extends ConsumerState<ViewRoutine> {
             ],
           ),
         ),
-        bottomNavigationBar: widget.isNew && routineExerciseListRead.isNotEmpty
+        bottomNavigationBar: widget.isNew || routineExerciseListRead.isEmpty
             ? null
             : BottomAppBar(
                 color: CustomColors.darkText,
                 child: TextButton(
-                  onPressed: () => Navigator.pushNamed(
-                    context,
-                    arguments: PageArguments(routineId: widget.routineId!),
-                    'active_routine',
-                  ),
+                  onPressed: () {
+                    updateRoutineDetails();
+                    updateRoutineExercises();
+
+                    Future.delayed(const Duration(milliseconds: 100), () {
+                      Navigator.pushNamed(
+                        context,
+                        arguments: PageArguments(
+                          routineId: widget.routineId!,
+                        ),
+                        'active_routine',
+                      );
+                    });
+                  },
                   child: const Text(
                     'START',
                     style: TextStyle(color: CustomColors.darkBackground),
@@ -374,10 +442,12 @@ class _ViewRoutineState extends ConsumerState<ViewRoutine> {
 
 class ExerciseSearchAutocomplete extends ConsumerStatefulWidget {
   final VoidCallback focusBehavior;
+  final VoidCallback updateRoutineExercises;
 
   const ExerciseSearchAutocomplete({
     Key? key,
     required this.focusBehavior,
+    required this.updateRoutineExercises,
   }) : super(key: key);
 
   @override
@@ -452,6 +522,10 @@ class _ExerciseSearchAutocompleteState
                           routineExerciseList.add(
                             RoutineExercise(option.exercise, 0),
                           );
+
+                          Future.delayed(const Duration(milliseconds: 100), () {
+                            widget.updateRoutineExercises();
+                          });
                         },
                         child: Container(
                             color: CustomColors.darkBackground, child: option),
@@ -531,6 +605,7 @@ class ExerciseSearchResult extends ConsumerWidget {
 }
 
 class RoutineExerciseBox extends ConsumerStatefulWidget {
+  final VoidCallback updateRoutineExercises;
   final TextEditingController restController;
   final TextEditingController setController;
   final TextEditingController repTimeController;
@@ -544,6 +619,7 @@ class RoutineExerciseBox extends ConsumerStatefulWidget {
 
   RoutineExerciseBox({
     Key? key,
+    required this.updateRoutineExercises,
     required this.restController,
     required this.setController,
     required this.repTimeController,
@@ -576,6 +652,8 @@ class _RoutineExerciseBoxState extends ConsumerState<RoutineExerciseBox> {
                     int.parse(widget.weightController.text) < 1) {
                   widget.weightController.text = '1';
                 }
+
+                widget.updateRoutineExercises();
               }
             },
             child: Column(
@@ -617,6 +695,8 @@ class _RoutineExerciseBoxState extends ConsumerState<RoutineExerciseBox> {
               if (!hasFocus) {
                 TimeValidation.validate(
                     widget.repTimeController.text, widget.repTimeController);
+
+                widget.updateRoutineExercises();
               }
             },
             child: Column(
@@ -649,6 +729,8 @@ class _RoutineExerciseBoxState extends ConsumerState<RoutineExerciseBox> {
                     int.parse(widget.repTimeController.text) < 1) {
                   widget.repTimeController.text = '1';
                 }
+
+                widget.updateRoutineExercises();
               }
             },
             child: Column(
@@ -693,8 +775,12 @@ class _RoutineExerciseBoxState extends ConsumerState<RoutineExerciseBox> {
                     child: Focus(
                       onFocusChange: (hasFocus) {
                         if (!hasFocus) {
-                          TimeValidation.validate(widget.restController.text,
-                              widget.restController);
+                          TimeValidation.validate(
+                            widget.restController.text,
+                            widget.restController,
+                          );
+
+                          widget.updateRoutineExercises();
                         }
                       },
                       child: Column(
@@ -725,6 +811,8 @@ class _RoutineExerciseBoxState extends ConsumerState<RoutineExerciseBox> {
                               int.parse(widget.setController.text) < 1) {
                             widget.setController.text = '1';
                           }
+
+                          widget.updateRoutineExercises();
                         }
                       },
                       child: Column(
