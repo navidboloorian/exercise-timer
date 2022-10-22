@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class TimeValidation {
   static int toSeconds(String time) {
-    if (time.isEmpty) {
+    if (time.length < 5) {
       return 0;
     }
 

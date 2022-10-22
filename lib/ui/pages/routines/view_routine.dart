@@ -120,11 +120,13 @@ class _ViewRoutineState extends ConsumerState<ViewRoutine> {
     _nameController.dispose();
     _tagsController.dispose();
 
+    print(_restControllerList.length);
+
     for (int i = 0; i < _restControllerList.length; i++) {
-      _restControllerList[i].dispose();
-      _setControllerList[i].dispose();
-      _repTimeControllerList[i].dispose();
-      _weightControllerList[i].dispose();
+      _restControllerList[i]?.dispose();
+      _setControllerList[i]?.dispose();
+      _repTimeControllerList[i]?.dispose();
+      _weightControllerList[i]?.dispose();
     }
 
     _restControllerList.clear();
@@ -167,7 +169,12 @@ class _ViewRoutineState extends ConsumerState<ViewRoutine> {
               routineExercise.time =
                   TimeValidation.toSeconds(_repTimeControllerList[i].text);
             } else {
-              routineExercise.reps = int.parse(_repTimeControllerList[i].text);
+              if (_repTimeControllerList[i].text.isEmpty) {
+                routineExercise.reps = 1;
+              } else {
+                routineExercise.reps =
+                    int.parse(_repTimeControllerList[i].text);
+              }
             }
 
             if (routineExercise.exercise.isWeighted) {
@@ -191,6 +198,8 @@ class _ViewRoutineState extends ConsumerState<ViewRoutine> {
       }
 
       void updateRoutineDetails() async {
+        if (widget.isNew) return;
+
         if (_formKey.currentState!.validate()) {
           String name = _nameController.text;
           String description = 'blank';
@@ -210,6 +219,8 @@ class _ViewRoutineState extends ConsumerState<ViewRoutine> {
       }
 
       void updateRoutineExercises() async {
+        if (widget.isNew) return;
+
         int routineId = widget.routineId!;
 
         await DatabaseHelper.deleteRoutineExercises(routineId);
@@ -223,6 +234,10 @@ class _ViewRoutineState extends ConsumerState<ViewRoutine> {
             routineExercise.time =
                 TimeValidation.toSeconds(_repTimeControllerList[i].text);
           } else {
+            if (_repTimeControllerList[i].text.isEmpty) {
+              _repTimeControllerList[i].text = '1';
+            }
+
             routineExercise.reps = int.parse(_repTimeControllerList[i].text);
           }
 
@@ -244,7 +259,12 @@ class _ViewRoutineState extends ConsumerState<ViewRoutine> {
         if (index >= _restControllerList.length) {
           _restControllerList.add(TextEditingController());
           _setControllerList.add(TextEditingController(text: '1'));
-          _repTimeControllerList.add(TextEditingController());
+
+          if (exercise.exercise.isTimed) {
+            _repTimeControllerList.add(TextEditingController());
+          } else {
+            _repTimeControllerList.add(TextEditingController(text: '1'));
+          }
           _weightControllerList.add(TextEditingController(text: '1'));
         }
 
@@ -256,6 +276,19 @@ class _ViewRoutineState extends ConsumerState<ViewRoutine> {
           ),
           onDismissed: (direction) {
             routineExerciseList.delete(exercise);
+
+            // stop controllers from being misalligned upon removal by disposing
+            _restControllerList[index].dispose();
+            _setControllerList[index].dispose();
+            _repTimeControllerList[index].dispose();
+            _weightControllerList[index].dispose();
+
+            // make sure there is no rediposing by dropping controllers from list
+            _restControllerList.removeAt(index);
+            _setControllerList.removeAt(index);
+            _repTimeControllerList.removeAt(index);
+            _weightControllerList.removeAt(index);
+
             updateRoutineExercises();
           },
           child: RoutineExerciseBox(
@@ -269,6 +302,9 @@ class _ViewRoutineState extends ConsumerState<ViewRoutine> {
           ),
         );
       }
+
+      print("called");
+      print("-----");
 
       // generate list of widgets to render to the screen
       List<Widget> getRoutineExerciseList() => routineExerciseListRead
@@ -718,8 +754,6 @@ class _RoutineExerciseBoxState extends ConsumerState<RoutineExerciseBox> {
           ),
         );
       } else {
-        widget.repTimeController.text = '1';
-
         return SizedBox(
           width: 35,
           child: Focus(
