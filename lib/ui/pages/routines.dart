@@ -3,17 +3,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../shared/widgets/shared_widgets.dart';
-import '../../utils/colors.dart';
 import '../shared/providers/shared_providers.dart';
+import '../../utils/colors.dart';
 import '../../../db/models/routine.dart';
 
-class Routines extends ConsumerWidget {
+class Routines extends ConsumerStatefulWidget {
   final List<String> pages;
 
   const Routines({Key? key, required this.pages}) : super(key: key);
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ConsumerStatefulWidget> createState() => _RoutinesState();
+}
+
+class _RoutinesState extends ConsumerState<Routines> {
+  @override
+  Widget build(BuildContext context) {
     final routineListRead = ref.watch(routineListProvider);
     final routineList = ref.watch(routineListProvider.notifier);
 
@@ -82,12 +87,17 @@ class Routines extends ConsumerWidget {
               children: [
                 Center(
                   child: Column(
-                    children: routineListRenderer(),
+                    children: [
+                      Row(
+                        children: [TextFormField(), const Icon(Icons.search)],
+                      ),
+                      ...routineListRenderer()
+                    ],
                   ),
                 ),
               ],
             ),
-      bottomNavigationBar: BottomBar(pages: pages),
+      bottomNavigationBar: BottomBar(pages: widget.pages),
     );
   }
 }
