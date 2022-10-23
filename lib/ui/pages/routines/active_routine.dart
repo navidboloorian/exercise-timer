@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:isolate';
+import 'dart:math';
 
 import 'package:exercise_timer/db/database_helper.dart';
 import 'package:exercise_timer/ui/shared/classes/shared_classes.dart';
@@ -8,9 +9,46 @@ import 'package:exercise_timer/ui/shared/widgets/drop_shadow_container.dart';
 import 'package:exercise_timer/utils/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path/path.dart';
 
 import '../../../db/models/routine.dart';
 import '../../../db/models/routine_exercise.dart';
+
+enum Screen { exercise, rest }
+
+class RoutineScreen extends ConsumerWidget {
+  final RoutineExercise currentExercise;
+  final Screen screen;
+  final int setsLeft;
+  final Function displayNextScreen;
+
+  const RoutineScreen({
+    super.key,
+    required this.currentExercise,
+    required this.screen,
+    required this.setsLeft,
+    required this.displayNextScreen,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    switch (screen) {
+      case Screen.exercise:
+        return ExerciseScreen(
+          currentExercise: currentExercise,
+          setsLeft: setsLeft,
+          displayNextScreen: displayNextScreen,
+        );
+      case Screen.rest:
+        return RestScreen(
+          time: currentExercise.rest,
+          displayNextScreen: displayNextScreen,
+        );
+      default:
+        return Container();
+    }
+  }
+}
 
 class ActiveRoutine extends ConsumerStatefulWidget {
   final int routineId;
@@ -26,6 +64,41 @@ class _ActiveRoutineState extends ConsumerState<ActiveRoutine> {
   List<RoutineExercise> _routineExerciseList = <RoutineExercise>[];
   int _currentIndex = 0;
   int _setsLeft = 0;
+  Screen screen = Screen.exercise;
+
+  void nextExercise() {
+    setState(() {
+      if (_setsLeft > 1) {
+        _setsLeft--;
+      } else {
+        if (_currentIndex < _routineExerciseList.length) {
+          _currentIndex =
+              min(_currentIndex + 1, _routineExerciseList.length - 1);
+
+          print(_currentIndex);
+          print("start");
+        } else {
+          print("end");
+        }
+      }
+    });
+  }
+
+  void setScreen(Screen nextScreen) {
+    setState(() {
+      screen = nextScreen;
+    });
+  }
+
+  void displayNextScreen() {
+    if (screen == Screen.rest) {
+      setScreen(Screen.exercise);
+    } else {
+      setScreen(Screen.rest);
+    }
+
+    nextExercise();
+  }
 
   @override
   void initState() {
@@ -39,30 +112,12 @@ class _ActiveRoutineState extends ConsumerState<ActiveRoutine> {
         () {
           _isLoading = false;
           _routineExerciseList = routineExerciseList;
-          _setsLeft = routineExerciseList[0].sets!;
+          _setsLeft = routineExerciseList[_currentIndex].sets!;
         },
       );
     }
 
     setRoutineExerciseList();
-  }
-
-  RoutineExercise nextExercise() {
-    if (_setsLeft > 0) {
-      setState(() {
-        _setsLeft -= 1;
-      });
-    } else {
-      setState(() {
-        if (_currentIndex < _routineExerciseList.length - 1) {
-          _currentIndex++;
-        }
-
-        _setsLeft = _routineExerciseList[_currentIndex].sets!;
-      });
-    }
-
-    return _routineExerciseList[_currentIndex];
   }
 
   @override
@@ -76,17 +131,18 @@ class _ActiveRoutineState extends ConsumerState<ActiveRoutine> {
           backgroundColor: CustomColors.darkText,
           foregroundColor: CustomColors.darkBackground,
         ),
-        body: ExerciseScreen(
+        body: RoutineScreen(
           currentExercise: _routineExerciseList[_currentIndex],
-          nextExercise: nextExercise,
-          setsLeft: _setsLeft,
+          setsLeft: _routineExerciseList[_currentIndex].sets!,
+          screen: screen,
+          displayNextScreen: displayNextScreen,
         ),
         bottomNavigationBar: BottomAppBar(
           color: CustomColors.darkBackground,
           child: TextButton(
             style: TextButton.styleFrom(
                 backgroundColor: CustomColors.darkBackground),
-            onPressed: null,
+            onPressed: () => displayNextScreen(),
             child: const Text(
               'DONE',
               style: TextStyle(color: CustomColors.darkText),
@@ -100,14 +156,14 @@ class _ActiveRoutineState extends ConsumerState<ActiveRoutine> {
 
 class ExerciseScreen extends ConsumerStatefulWidget {
   final RoutineExercise currentExercise;
-  final Function nextExercise;
   final int setsLeft;
+  final Function displayNextScreen;
 
   const ExerciseScreen(
       {super.key,
       required this.currentExercise,
-      required this.nextExercise,
-      required this.setsLeft});
+      required this.setsLeft,
+      required this.displayNextScreen});
 
   @override
   ConsumerState<ConsumerStatefulWidget> createState() => _ExerciseScreenState();
@@ -124,11 +180,11 @@ class _ExerciseScreenState extends ConsumerState<ExerciseScreen> {
   void startTimer() {
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_timeLeft == 0) {
+        widget.displayNextScreen();
+
         setState(() {
           timer.cancel();
         });
-
-        widget.nextExercise();
       } else {
         setState(() {
           _timeLeft = _timeLeft! - 1;
@@ -213,10 +269,10 @@ class _ExerciseScreenState extends ConsumerState<ExerciseScreen> {
 
 class RestScreen extends ConsumerStatefulWidget {
   final int time;
-  final int exerciseIndex;
+  final Function displayNextScreen;
 
   const RestScreen(
-      {super.key, required this.time, required this.exerciseIndex});
+      {super.key, required this.time, required this.displayNextScreen});
 
   @override
   ConsumerState<ConsumerStatefulWidget> createState() => _RestScreenState();
@@ -242,6 +298,8 @@ class _RestScreenState extends ConsumerState<RestScreen> {
         setState(() {
           timer.cancel();
         });
+
+        widget.displayNextScreen();
       } else {
         setState(() {
           _timeLeft--;

@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../db/models/routine_exercise.dart';
 
 class RoutineExerciseListNotifier extends StateNotifier<List<RoutineExercise>> {
-  // set default state to 0
   RoutineExerciseListNotifier() : super(<RoutineExercise>[]);
 
   void add(RoutineExercise exercise) {
@@ -21,8 +20,10 @@ class RoutineExerciseListNotifier extends StateNotifier<List<RoutineExercise>> {
   }
 
   void delete(RoutineExercise exercise) {
-    state.remove(exercise);
-    state = state;
+    state = [
+      for (int i = 0; i < state.length; i++)
+        if (state[i] != exercise) state[i],
+    ];
   }
 
   void clear() {

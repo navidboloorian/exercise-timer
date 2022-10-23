@@ -24,6 +24,8 @@ class ViewRoutine extends ConsumerStatefulWidget {
 }
 
 class _ViewRoutineState extends ConsumerState<ViewRoutine> {
+  int resetCounter = 0;
+
   // used to submit the form/validate
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
@@ -120,13 +122,11 @@ class _ViewRoutineState extends ConsumerState<ViewRoutine> {
     _nameController.dispose();
     _tagsController.dispose();
 
-    print(_restControllerList.length);
-
     for (int i = 0; i < _restControllerList.length; i++) {
-      _restControllerList[i]?.dispose();
-      _setControllerList[i]?.dispose();
-      _repTimeControllerList[i]?.dispose();
-      _weightControllerList[i]?.dispose();
+      _restControllerList[i].dispose();
+      _setControllerList[i].dispose();
+      _repTimeControllerList[i].dispose();
+      _weightControllerList[i].dispose();
     }
 
     _restControllerList.clear();
@@ -225,8 +225,6 @@ class _ViewRoutineState extends ConsumerState<ViewRoutine> {
 
         await DatabaseHelper.deleteRoutineExercises(routineId);
 
-        routineList.update();
-
         for (int i = 0; i < routineExerciseListRead.length; i++) {
           RoutineExercise routineExercise = routineExerciseListRead[i];
 
@@ -255,6 +253,8 @@ class _ViewRoutineState extends ConsumerState<ViewRoutine> {
         }
       }
 
+      updateRoutineExercises();
+
       Widget buildWidget(int index, RoutineExercise exercise) {
         if (index >= _restControllerList.length) {
           _restControllerList.add(TextEditingController());
@@ -265,6 +265,7 @@ class _ViewRoutineState extends ConsumerState<ViewRoutine> {
           } else {
             _repTimeControllerList.add(TextEditingController(text: '1'));
           }
+
           _weightControllerList.add(TextEditingController(text: '1'));
         }
 
@@ -275,6 +276,7 @@ class _ViewRoutineState extends ConsumerState<ViewRoutine> {
             child: const Center(child: Icon(Icons.remove_circle)),
           ),
           onDismissed: (direction) {
+            // TODO: fix issue with index >= list.length
             routineExerciseList.delete(exercise);
 
             // stop controllers from being misalligned upon removal by disposing
@@ -288,8 +290,6 @@ class _ViewRoutineState extends ConsumerState<ViewRoutine> {
             _setControllerList.removeAt(index);
             _repTimeControllerList.removeAt(index);
             _weightControllerList.removeAt(index);
-
-            updateRoutineExercises();
           },
           child: RoutineExerciseBox(
             key: UniqueKey(),
@@ -303,14 +303,17 @@ class _ViewRoutineState extends ConsumerState<ViewRoutine> {
         );
       }
 
-      print("called");
-      print("-----");
+      print("VVVVVVVVVVVVVVVVVVVVVVV");
+      print(routineExerciseListRead.length);
+      print("^^^^^^^^^^^^^^^^^^^^^^^^^^^");
 
       // generate list of widgets to render to the screen
       List<Widget> getRoutineExerciseList() => routineExerciseListRead
           .asMap()
-          .map((index, exercise) =>
-              MapEntry(index, buildWidget(index, exercise)))
+          .map((index, exercise) {
+            print(index);
+            return MapEntry(index, buildWidget(index, exercise));
+          })
           .values
           .toList();
 
@@ -558,10 +561,6 @@ class _ExerciseSearchAutocompleteState
                           routineExerciseList.add(
                             RoutineExercise(option.exercise, 0),
                           );
-
-                          Future.delayed(const Duration(milliseconds: 100), () {
-                            widget.updateRoutineExercises();
-                          });
                         },
                         child: Container(
                             color: CustomColors.darkBackground, child: option),
@@ -674,6 +673,12 @@ class RoutineExerciseBox extends ConsumerStatefulWidget {
 }
 
 class _RoutineExerciseBoxState extends ConsumerState<RoutineExerciseBox> {
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     Widget weightedField() {
