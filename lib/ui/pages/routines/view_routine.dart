@@ -80,6 +80,8 @@ class _ViewRoutineState extends ConsumerState<ViewRoutine> {
 
       for (RoutineExercise routineExercise in routineExercises) {
         if (routineExercise.exercise.isTimed) {
+          routineExercise.time ??= 0;
+
           _repTimeControllerList.add(TextEditingController(
               text: TimeValidation.toTime(routineExercise.time!)));
         } else {
@@ -232,7 +234,8 @@ class _ViewRoutineState extends ConsumerState<ViewRoutine> {
             routineExercise.time =
                 TimeValidation.toSeconds(_repTimeControllerList[i].text);
           } else {
-            if (_repTimeControllerList[i].text.isEmpty) {
+            if (_repTimeControllerList[i].text == null ||
+                _repTimeControllerList[i].text.isEmpty) {
               _repTimeControllerList[i].text = '1';
             }
 

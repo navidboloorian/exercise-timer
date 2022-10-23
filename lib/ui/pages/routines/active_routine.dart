@@ -71,15 +71,7 @@ class _ActiveRoutineState extends ConsumerState<ActiveRoutine> {
       if (_setsLeft > 1) {
         _setsLeft--;
       } else {
-        if (_currentIndex < _routineExerciseList.length) {
-          _currentIndex =
-              min(_currentIndex + 1, _routineExerciseList.length - 1);
-
-          print(_currentIndex);
-          print("start");
-        } else {
-          print("end");
-        }
+        _currentIndex = min(_currentIndex + 1, _routineExerciseList.length - 1);
       }
     });
   }
@@ -241,6 +233,14 @@ class _ExerciseScreenState extends ConsumerState<ExerciseScreen> {
                   color: CustomColors.darkBackground, fontSize: 30),
             ),
           ),
+          if (_isWeighted)
+            Center(
+              child: Text(
+                '${_currentExercise.weight!} lbs',
+                style: const TextStyle(
+                    color: CustomColors.darkBackground, fontSize: 25),
+              ),
+            ),
           Center(
             child: Text(
               repTime,
@@ -248,19 +248,20 @@ class _ExerciseScreenState extends ConsumerState<ExerciseScreen> {
                   color: CustomColors.darkBackground, fontSize: 50),
             ),
           ),
-          Row(
-            children: [
-              SizedBox(width: MediaQuery.of(context).size.width * 0.05),
-              DropShadowContainer(
-                color: CustomColors.darkText,
-                child: Text(
-                  _currentExercise.exercise.description,
-                  style: const TextStyle(color: CustomColors.darkBackground),
+          if (_currentExercise.exercise.description.isNotEmpty)
+            Row(
+              children: [
+                SizedBox(width: MediaQuery.of(context).size.width * 0.05),
+                DropShadowContainer(
+                  color: CustomColors.darkText,
+                  child: Text(
+                    _currentExercise.exercise.description,
+                    style: const TextStyle(color: CustomColors.darkBackground),
+                  ),
                 ),
-              ),
-              SizedBox(width: MediaQuery.of(context).size.width * 0.05),
-            ],
-          )
+                SizedBox(width: MediaQuery.of(context).size.width * 0.05),
+              ],
+            )
         ],
       ),
     );
