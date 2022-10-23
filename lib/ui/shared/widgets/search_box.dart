@@ -14,8 +14,19 @@ class SearchBox extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return DropShadowContainer(
+      hasPadding: false,
       child: Row(
-        children: [TextField(controller: controller), const Icon(Icons.search)],
+        children: [
+          const SizedBox(width: 5),
+          Flexible(
+            child: TextField(
+              controller: controller,
+              decoration: const InputDecoration(hintText: 'Search...'),
+            ),
+          ),
+          const Center(child: Icon(Icons.search)),
+          const SizedBox(width: 5),
+        ],
       ),
     );
   }

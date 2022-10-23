@@ -17,6 +17,27 @@ class Routines extends ConsumerStatefulWidget {
 }
 
 class _RoutinesState extends ConsumerState<Routines> {
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController.addListener(_setSearchQuery);
+  }
+
+  void _setSearchQuery() {
+    setState(() {
+      _searchQuery = _searchController.text;
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _searchController.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final routineListRead = ref.watch(routineListProvider);
@@ -26,40 +47,42 @@ class _RoutinesState extends ConsumerState<Routines> {
       List<Widget> widgetList = <Widget>[];
 
       for (Routine routine in routineListRead) {
-        widgetList.add(
-          Dismissible(
-            key: UniqueKey(),
-            background: Container(
-              width: MediaQuery.of(context).size.width * 0.9,
-              color: CustomColors.removeRed,
-              child: const Center(child: Icon(Icons.delete)),
-            ),
-            onDismissed: (direction) {
-              routineList.delete(routine);
-            },
-            child: GestureDetector(
-              onTap: () => Navigator.pushNamed(
-                context,
-                arguments: PageArguments(isNew: false, routineId: routine.id),
-                'view_routine',
+        if (routine.name.toLowerCase().contains(_searchQuery)) {
+          widgetList.add(
+            Dismissible(
+              key: UniqueKey(),
+              background: Container(
+                width: MediaQuery.of(context).size.width * 0.9,
+                color: CustomColors.removeRed,
+                child: const Center(child: Icon(Icons.delete)),
               ),
-              child: Row(
-                children: [
-                  SizedBox(width: MediaQuery.of(context).size.width * 0.05),
-                  DropShadowContainer(
-                    tags: routine.tags,
-                    child: Row(
-                      children: [
-                        Text(routine.name),
-                      ],
+              onDismissed: (direction) {
+                routineList.delete(routine);
+              },
+              child: GestureDetector(
+                onTap: () => Navigator.pushNamed(
+                  context,
+                  arguments: PageArguments(isNew: false, routineId: routine.id),
+                  'view_routine',
+                ),
+                child: Row(
+                  children: [
+                    SizedBox(width: MediaQuery.of(context).size.width * 0.05),
+                    DropShadowContainer(
+                      tags: routine.tags,
+                      child: Row(
+                        children: [
+                          Text(routine.name),
+                        ],
+                      ),
                     ),
-                  ),
-                  SizedBox(width: MediaQuery.of(context).size.width * 0.05),
-                ],
+                    SizedBox(width: MediaQuery.of(context).size.width * 0.05),
+                  ],
+                ),
               ),
             ),
-          ),
-        );
+          );
+        }
       }
 
       return widgetList;
@@ -88,10 +111,11 @@ class _RoutinesState extends ConsumerState<Routines> {
                 Center(
                   child: Column(
                     children: [
-                      Row(
-                        children: [TextFormField(), const Icon(Icons.search)],
-                      ),
-                      ...routineListRenderer()
+                      SearchBox(controller: _searchController),
+                      if (routineListRenderer().isNotEmpty)
+                        ...routineListRenderer()
+                      else
+                        const Text('No routines'),
                     ],
                   ),
                 ),
