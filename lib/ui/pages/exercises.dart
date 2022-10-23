@@ -7,13 +7,33 @@ import '../../utils/colors.dart';
 import '../shared/providers/shared_providers.dart';
 import '../../../db/models/exercise.dart';
 
-class Exercises extends ConsumerWidget {
+class Exercises extends ConsumerStatefulWidget {
   final List<String> pages;
 
   const Exercises({Key? key, required this.pages}) : super(key: key);
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ConsumerStatefulWidget> createState() => _ExercisesState();
+}
+
+class _ExercisesState extends ConsumerState<Exercises> {
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController.addListener(_setSearchQuery);
+  }
+
+  void _setSearchQuery() {
+    setState(() {
+      _searchQuery = _searchController.text;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final exerciseListRead = ref.watch(exerciseListProvider);
     final exerciseList = ref.watch(exerciseListProvider.notifier);
 
@@ -21,40 +41,42 @@ class Exercises extends ConsumerWidget {
       List<Widget> widgetList = <Widget>[];
 
       for (Exercise exercise in exerciseListRead) {
-        widgetList.add(
-          Dismissible(
-            key: UniqueKey(),
-            background: Container(
-              width: MediaQuery.of(context).size.width * 0.9,
-              color: CustomColors.removeRed,
-              child: const Center(child: Icon(Icons.delete)),
-            ),
-            onDismissed: (direction) {
-              exerciseList.delete(exercise);
-            },
-            child: GestureDetector(
-              onTap: () => Navigator.pushNamed(
-                  context,
-                  arguments:
-                      PageArguments(isNew: false, exerciseId: exercise.id),
-                  'view_exercise'),
-              child: Row(
-                children: [
-                  SizedBox(width: MediaQuery.of(context).size.width * 0.05),
-                  DropShadowContainer(
-                    tags: exercise.tags,
-                    child: Row(
-                      children: [
-                        Text(exercise.name),
-                      ],
+        if (exercise.name.contains(_searchQuery)) {
+          widgetList.add(
+            Dismissible(
+              key: UniqueKey(),
+              background: Container(
+                width: MediaQuery.of(context).size.width * 0.9,
+                color: CustomColors.removeRed,
+                child: const Center(child: Icon(Icons.delete)),
+              ),
+              onDismissed: (direction) {
+                exerciseList.delete(exercise);
+              },
+              child: GestureDetector(
+                onTap: () => Navigator.pushNamed(
+                    context,
+                    arguments:
+                        PageArguments(isNew: false, exerciseId: exercise.id),
+                    'view_exercise'),
+                child: Row(
+                  children: [
+                    SizedBox(width: MediaQuery.of(context).size.width * 0.05),
+                    DropShadowContainer(
+                      tags: exercise.tags,
+                      child: Row(
+                        children: [
+                          Text(exercise.name),
+                        ],
+                      ),
                     ),
-                  ),
-                  SizedBox(width: MediaQuery.of(context).size.width * 0.05),
-                ],
+                    SizedBox(width: MediaQuery.of(context).size.width * 0.05),
+                  ],
+                ),
               ),
             ),
-          ),
-        );
+          );
+        }
       }
 
       return widgetList;
@@ -82,12 +104,18 @@ class Exercises extends ConsumerWidget {
               children: [
                 Center(
                   child: Column(
-                    children: exerciseListRenderer(),
+                    children: [
+                      SearchBox(controller: _searchController),
+                      if (exerciseListRenderer().isNotEmpty)
+                        ...exerciseListRenderer()
+                      else
+                        const Text('No exercises'),
+                    ],
                   ),
                 ),
               ],
             ),
-      bottomNavigationBar: BottomBar(pages: pages),
+      bottomNavigationBar: BottomBar(pages: widget.pages),
     );
   }
 }
