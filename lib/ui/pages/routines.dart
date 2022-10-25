@@ -47,41 +47,47 @@ class _RoutinesState extends ConsumerState<Routines> {
       List<Widget> widgetList = <Widget>[];
 
       for (Routine routine in routineListRead) {
-        if (routine.name.toLowerCase().contains(_searchQuery)) {
-          widgetList.add(
-            Dismissible(
-              key: UniqueKey(),
-              background: Container(
-                width: MediaQuery.of(context).size.width * 0.9,
-                color: CustomColors.removeRed,
-                child: const Center(child: Icon(Icons.delete)),
-              ),
-              onDismissed: (direction) {
-                routineList.delete(routine);
-              },
-              child: GestureDetector(
-                onTap: () => Navigator.pushNamed(
-                  context,
-                  arguments: PageArguments(isNew: false, routineId: routine.id),
-                  'view_routine',
+        for (String tag in routine.tags) {
+          if (routine.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+              tag.toLowerCase().contains(_searchQuery.toLowerCase())) {
+            widgetList.add(
+              Dismissible(
+                key: UniqueKey(),
+                background: Container(
+                  width: MediaQuery.of(context).size.width * 0.9,
+                  color: CustomColors.removeRed,
+                  child: const Center(child: Icon(Icons.delete)),
                 ),
-                child: Row(
-                  children: [
-                    SizedBox(width: MediaQuery.of(context).size.width * 0.05),
-                    DropShadowContainer(
-                      tags: routine.tags,
-                      child: Row(
-                        children: [
-                          Text(routine.name),
-                        ],
+                onDismissed: (direction) {
+                  routineList.delete(routine);
+                },
+                child: GestureDetector(
+                  onTap: () => Navigator.pushNamed(
+                    context,
+                    arguments:
+                        PageArguments(isNew: false, routineId: routine.id),
+                    'view_routine',
+                  ),
+                  child: Row(
+                    children: [
+                      SizedBox(width: MediaQuery.of(context).size.width * 0.05),
+                      DropShadowContainer(
+                        tags: routine.tags,
+                        child: Row(
+                          children: [
+                            Text(routine.name),
+                          ],
+                        ),
                       ),
-                    ),
-                    SizedBox(width: MediaQuery.of(context).size.width * 0.05),
-                  ],
+                      SizedBox(width: MediaQuery.of(context).size.width * 0.05),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          );
+            );
+
+            break;
+          }
         }
       }
 

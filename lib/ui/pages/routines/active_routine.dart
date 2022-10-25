@@ -326,10 +326,23 @@ class _RestScreenState extends ConsumerState<RestScreen> {
     }
 
     return Center(
-      child: Text(
-        timerString,
-        style: const TextStyle(color: CustomColors.darkBackground),
-      ),
-    );
+        child: ListView(
+      shrinkWrap: true,
+      children: [
+        const Center(
+          child: Text(
+            "Rest",
+            style: TextStyle(color: CustomColors.darkBackground, fontSize: 30),
+          ),
+        ),
+        Center(
+          child: Text(
+            timerString,
+            style: const TextStyle(
+                color: CustomColors.darkBackground, fontSize: 50),
+          ),
+        ),
+      ],
+    ));
   }
 }

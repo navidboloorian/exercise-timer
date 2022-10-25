@@ -41,41 +41,48 @@ class _ExercisesState extends ConsumerState<Exercises> {
       List<Widget> widgetList = <Widget>[];
 
       for (Exercise exercise in exerciseListRead) {
-        if (exercise.name.contains(_searchQuery)) {
-          widgetList.add(
-            Dismissible(
-              key: UniqueKey(),
-              background: Container(
-                width: MediaQuery.of(context).size.width * 0.9,
-                color: CustomColors.removeRed,
-                child: const Center(child: Icon(Icons.delete)),
-              ),
-              onDismissed: (direction) {
-                exerciseList.delete(exercise);
-              },
-              child: GestureDetector(
-                onTap: () => Navigator.pushNamed(
-                    context,
-                    arguments:
-                        PageArguments(isNew: false, exerciseId: exercise.id),
-                    'view_exercise'),
-                child: Row(
-                  children: [
-                    SizedBox(width: MediaQuery.of(context).size.width * 0.05),
-                    DropShadowContainer(
-                      tags: exercise.tags,
-                      child: Row(
-                        children: [
-                          Text(exercise.name),
-                        ],
+        for (String tag in exercise.tags) {
+          if (exercise.name
+                  .toLowerCase()
+                  .contains(_searchQuery.toLowerCase()) ||
+              tag.toLowerCase().contains(_searchQuery.toLowerCase())) {
+            widgetList.add(
+              Dismissible(
+                key: UniqueKey(),
+                background: Container(
+                  width: MediaQuery.of(context).size.width * 0.9,
+                  color: CustomColors.removeRed,
+                  child: const Center(child: Icon(Icons.delete)),
+                ),
+                onDismissed: (direction) {
+                  exerciseList.delete(exercise);
+                },
+                child: GestureDetector(
+                  onTap: () => Navigator.pushNamed(
+                      context,
+                      arguments:
+                          PageArguments(isNew: false, exerciseId: exercise.id),
+                      'view_exercise'),
+                  child: Row(
+                    children: [
+                      SizedBox(width: MediaQuery.of(context).size.width * 0.05),
+                      DropShadowContainer(
+                        tags: exercise.tags,
+                        child: Row(
+                          children: [
+                            Text(exercise.name),
+                          ],
+                        ),
                       ),
-                    ),
-                    SizedBox(width: MediaQuery.of(context).size.width * 0.05),
-                  ],
+                      SizedBox(width: MediaQuery.of(context).size.width * 0.05),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          );
+            );
+
+            break;
+          }
         }
       }
 
