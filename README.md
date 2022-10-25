@@ -36,4 +36,4 @@ An application for creating fully customizable routines in a modular way. Start 
 - Start your routine with the click of the button. Just worry about working out, all tracking is done by the app
 
 ## What's next?
-In future versions I'll be looking to add online routine sharing. That way, you won't need to scour through the internet transcribing various routines; they'll all be available with the single tap. I'll also be adding more robust progress tracking with graph representations 
+In future versions I'll be looking to add online routine sharing. That way, you won't need to scour through the internet transcribing various routines; they'll all be available with the single tap. I'll also be adding more robust progress tracking with graph representations. In short: there's must more to come. Stay tuned!
